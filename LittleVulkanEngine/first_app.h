@@ -14,10 +14,13 @@ namespace lve {
 
 	private:
 		lve::LVEWindow lveWindow{ WIDTH, HEIGHT, "HelloVulkan!" };
+		lve::LVEDevice lveDevice{ lveWindow };
 
-		lve::LVEPipeline pipeline{ 
+		lve::LVEPipeline pipeline{
+			lveDevice,
 			"E:/vulkan/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/sample_shader.vert.spv",
-			"E:/vulkan/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/sample_shader.frag.spv"
+			"E:/vulkan/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/sample_shader.frag.spv",
+			LVEPipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)
 			};
 	};
 }

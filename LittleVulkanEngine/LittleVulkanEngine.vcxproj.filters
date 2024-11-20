@@ -30,12 +30,18 @@
     <ClCompile Include="lve_pipeline.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lve_device.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="lve_pipeline.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_device.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

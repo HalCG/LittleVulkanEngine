@@ -158,10 +158,12 @@
     <ClCompile Include="lve_window.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="lve_window.cpp" />
+    <ClCompile Include="lve_device.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h" />
     <ClInclude Include="lve_pipeline.h" />
+    <ClInclude Include="lve_device.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
