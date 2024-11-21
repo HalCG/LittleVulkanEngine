@@ -41,8 +41,10 @@ namespace lve {
 	}
 
 	void FirstApp::createPipeline() {
-		auto pipelineConfig =
-			LVEPipeline::defaultPipelineConfigInfo(lveSwapChain.width(), lveSwapChain.height());
+		PipelineConfigInfo pipelineConfig{};
+		
+		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig, lveSwapChain.width(), lveSwapChain.height());
+
 
 		//这样头文件中构造lvePipeline的错误就没了
 		pipelineConfig.renderPass = lveSwapChain.getRenderPass();
