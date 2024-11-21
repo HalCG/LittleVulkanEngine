@@ -4,9 +4,23 @@
 #include <vector>
 #include "lve_device.h"
 
-struct PipelineConfigInfo {};
 
 namespace lve{
+	struct PipelineConfigInfo {
+		VkViewport viewport;
+		VkRect2D scissor;
+		//VkPipelineViewportStateCreateInfo viewportInfo;
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+		VkPipelineRasterizationStateCreateInfo rasterizationInfo;
+		VkPipelineMultisampleStateCreateInfo multisampleInfo;
+		VkPipelineColorBlendAttachmentState colorBlendAttachment;
+		VkPipelineColorBlendStateCreateInfo colorBlendInfo;
+		VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+		VkPipelineLayout pipelineLayout = nullptr;
+		VkRenderPass renderPass = nullptr;
+		uint32_t subpass = 0;
+	};
+
 	class LVEPipeline {
 	public:
 		LVEPipeline(
@@ -19,6 +33,9 @@ namespace lve{
 
 		LVEPipeline(const LVEPipeline&) = delete;
 		void operator=(const LVEPipeline&) = delete;
+
+		void bind(VkCommandBuffer commandBuffer);
+
 
 		static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
