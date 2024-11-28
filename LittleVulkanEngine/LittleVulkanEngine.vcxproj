@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="first_app.cpp" />
+    <ClCompile Include="lve_model.cpp" />
     <ClCompile Include="lve_pipeline.cpp" />
     <ClCompile Include="lve_swap_chain.cpp" />
     <ClCompile Include="lve_window.h" />
@@ -163,8 +164,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h" />
+    <ClInclude Include="lve_model.h" />
     <ClInclude Include="lve_pipeline.h" />
     <ClInclude Include="lve_device.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\compile.sh" />
+    <None Include="shaders\sample_shader.frag" />
+    <None Include="shaders\sample_shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
