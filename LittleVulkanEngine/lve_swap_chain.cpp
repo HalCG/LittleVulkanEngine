@@ -362,7 +362,7 @@ namespace lve {
 	VkSurfaceFormatKHR LVESwapChain::chooseSwapSurfaceFormat(
 		const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 		for (const auto& availableFormat : availableFormats) {
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&//VK_FORMAT_B8G8R8A8_UNORM
 				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				return availableFormat;
 			}
@@ -416,3 +416,25 @@ namespace lve {
 	}
 
 }  // namespace lve
+
+
+/*
+`VK_FORMAT_B8G8R8A8_UNORM` 和 `VK_FORMAT_B8G8R8A8_SRGB` 是 Vulkan API 中定义的两种不同的颜色格式。它们之间的主要区别在于颜色空间和色彩处理方式。下面是这两种格式的详细解释：
+
+1. **VK_FORMAT_B8G8R8A8_UNORM**：
+   - **类型**：这是一个未进行色彩空间转换的格式（linear format）。
+   - **色彩空间**：它在线性空间中表示颜色值，即颜色的处理是以线性方式进行的。这意味着颜色值直接对应于光强度，可以用于计算和线性插值等操作。
+   - **用途**：适合在需要线性颜色计算的场合，比如物理基础渲染（PBR）或纹理采样时。如果在这个格式下进行纹理过滤和混合，结果会直接基于光线的强度进行计算。
+
+2. **VK_FORMAT_B8G8R8A8_SRGB**：
+   - **类型**：这是一个标准RGB格式（gamma-corrected format）。
+   - **色彩空间**：它使用sRGB色彩空间，这是一个改进的颜色空间，考虑到了人眼对不同亮度的感知。这个空间会在较低亮度下进行非线性处理，提升暗部细节。
+   - **用途**：适合用于用户界面或最终输出给显示设备的纹理，因为它可以提供更好的视觉效果。使用此格式进行绘制的过程可以让纹理在显示时自动应用gamma校正。
+
+### 总结
+- **VK_FORMAT_B8G8R8A8_UNORM** 是在线性空间中处理的，适合需要精确计算的场景。
+- **VK_FORMAT_B8G8R8A8_SRGB** 是在sRGB空间中处理的，更适合视觉尤为重要的场合，如UI渲染和最终图像输出。
+
+在选择使用哪种格式时，需要根据你的渲染需求来决定使用哪个。有时，在同一个渲染过程中，可能会同时使用这两者，先在`UNORM`格式中进行计算，最后转换成`sRGB`格式进行显示。
+
+*/

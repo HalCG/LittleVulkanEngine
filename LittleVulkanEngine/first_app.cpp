@@ -26,11 +26,11 @@ namespace lve {
 
 	void FirstApp::loadModels() {
 		std::vector<LVEModel::Vertex> vertices{
-			{{0.0f, -0.5f}},
-			{{0.5f, 0.5f}},
-			{{-0.5f, 0.5f}}
+			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},//没有color属性的时候默认是黑色
+			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 		};
-		
+
 		lveModel = std::make_unique<LVEModel>(lveDevice, vertices);
 	}
 

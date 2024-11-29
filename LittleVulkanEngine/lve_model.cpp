@@ -49,11 +49,23 @@ namespace lve {
 	}
 
 	std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::gettAttributeDescriptions() {
-		std::vector <VkVertexInputAttributeDescription> attributeDescriptions(1);
+		std::vector <VkVertexInputAttributeDescription> attributeDescriptions(2);
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-		attributeDescriptions[0].offset = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex, position);
+
+		//此处颜色与顶点位置可以用两个不同bind，也可以使用一个绑定，不同属性偏移
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
 		return attributeDescriptions;
+		/*
+		return	{
+			{0,0,VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, position)},
+			{0,1,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex, color)}};
+		*/
 	}
 }
