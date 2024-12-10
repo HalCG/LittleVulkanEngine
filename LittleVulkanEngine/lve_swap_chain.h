@@ -19,7 +19,7 @@ class LVESwapChain {
   ~LVESwapChain();
 
   LVESwapChain(const LVESwapChain&) = delete;
-  void operator=(const LVESwapChain&) = delete;
+  LVESwapChain& operator=(const LVESwapChain&) = delete;
 
   VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
   VkRenderPass getRenderPass() { return renderPass; }

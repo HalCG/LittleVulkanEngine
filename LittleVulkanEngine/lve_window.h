@@ -21,12 +21,17 @@ namespace lve {
 			return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) 
 			}; }
 
+		bool wasWindowResize() { return framebufferResized; }
+		void resetWindowResizeFlag() { framebufferResized = false; }
+
 		void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
 	private:
+		static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 		void initWindow();
 		int width;
 		int height;
+		bool framebufferResized = false;
 		
 		GLFWwindow* window;
 		std::string windowName;

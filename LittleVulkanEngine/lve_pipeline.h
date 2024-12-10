@@ -28,6 +28,7 @@ namespace lve{
 
 	class LVEPipeline {
 	public:
+		LVEPipeline() = default;
 		LVEPipeline(
 			LVEDevice& device,
 			const std::string& vertFilePath,
@@ -56,6 +57,5 @@ namespace lve{
 		VkPipeline graphicsPipeline;
 		VkShaderModule vertShaderModule;
 		VkShaderModule fragShaderModule;
-
 	};
 }

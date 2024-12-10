@@ -167,6 +167,7 @@
     <ClInclude Include="lve_model.h" />
     <ClInclude Include="lve_pipeline.h" />
     <ClInclude Include="lve_device.h" />
+    <ClInclude Include="lve_swap_chain.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compile.sh" />
