@@ -60,12 +60,28 @@ namespace lve {
 		}
 
 		vkDeviceWaitIdle(lveDevice.device());
-		lveSwapChain = nullptr;///!!! 在某些系统中，两个交换链不能在同一窗口上共存，因此这确保了旧的交换链首先被销毁。
-		lveSwapChain = std::make_unique<LVESwapChain>(lveDevice, extent);
+
+		if (lveSwapChain == nullptr) {
+			lveSwapChain = std::make_unique<LVESwapChain>(lveDevice, extent);
+		}
+		else {
+			//lveSwapChain = nullptr;///!!! 在某些系统中，两个交换链不能在同一窗口上共存，因此这确保了旧的交换链首先被销毁。
+			lveSwapChain = std::make_unique<LVESwapChain>(lveDevice, extent, std::move(lveSwapChain));
+			
+			if (lveSwapChain->imageCount() != commandBuffers.size()) {
+				freeCommandBuffers();
+				createCommandBuffers();
+			}
+		}
+
+		// if render pass compatible do nothing else:
 		createPipeline();
 	}
 
 	void FirstApp::createPipeline() {
+		assert(lveSwapChain != nullptr && "Cannot create pipeline before swap chain");
+		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
 		PipelineConfigInfo pipelineConfig{};
 		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig);
 
@@ -95,6 +111,11 @@ namespace lve {
 		if (vkAllocateCommandBuffers(lveDevice.device(), &allocInfo, commandBuffers.data())) {
 			throw std::runtime_error("failed to allocae command buffers!");
 		}
+	}
+
+	void FirstApp::freeCommandBuffers() {
+		vkFreeCommandBuffers(lveDevice.device(), lveDevice.getCommandPool(), static_cast<float>(commandBuffers.size()), commandBuffers.data());
+		commandBuffers.clear();
 	}
 
 	void FirstApp::recordCommandBuffer(int imageIndex) {

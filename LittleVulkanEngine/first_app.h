@@ -29,6 +29,7 @@ namespace lve {
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
+		void freeCommandBuffers();
 		void drawFrame();
 
 		//resize window 
