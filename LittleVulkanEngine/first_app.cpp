@@ -67,9 +67,7 @@ namespace lve {
 
 	void FirstApp::createPipeline() {
 		PipelineConfigInfo pipelineConfig{};
-		
-		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig, lveSwapChain->width(), lveSwapChain->height());
-
+		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig);
 
 		//这样头文件中构造lvePipeline的错误就没了
 		pipelineConfig.renderPass = lveSwapChain->getRenderPass();
@@ -123,6 +121,18 @@ namespace lve {
 		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(lveSwapChain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(lveSwapChain->getSwapChainExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor{ {0,0}, lveSwapChain->getSwapChainExtent() };
+		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
 		lvePipeline->bind(commandBuffers[imageIndex]);
 		//vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
