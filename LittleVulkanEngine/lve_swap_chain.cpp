@@ -64,6 +64,7 @@ namespace lve {
 		}
 	}
 
+	//该方法用于获取下一个可用的图片索引，等待当前帧完成并返回下一个可用图片索引。内部实现通过信号量保证同步性。
 	VkResult LVESwapChain::acquireNextImage(uint32_t* imageIndex) {
 		vkWaitForFences(
 			device.device(),
@@ -83,13 +84,17 @@ namespace lve {
 		return result;
 	}
 
+	//提交命令缓冲区到 GPU，并处理呈现结果。此方法包括三个主要步骤：
 	VkResult LVESwapChain::submitCommandBuffers(
-		const VkCommandBuffer* buffers, uint32_t* imageIndex) {
+		const VkCommandBuffer* buffers, uint32_t* imageIndex) 
+	{
+		//1. 等待上一个图片完成。
 		if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
 			vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
 		}
 		imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
 
+		//2. 提交绘制命令到绘制队列。
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -107,10 +112,12 @@ namespace lve {
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
 		vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
+
 		if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
 
+		//3. 提交给呈现队列以显示结果。
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
@@ -131,9 +138,11 @@ namespace lve {
 	}
 
 	void LVESwapChain::createSwapChain() {
+		//获取支持的信息，如表面格式、呈现模式以及扩展信息。
 		SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
-
+		//surfaceFormat: 描述颜色格式及其颜色空间，比如选择色彩空间为 sRGB 的 B8G8R8A8 格式表示.
 		VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+		//presentMode: 描述如何将已准备好的画面展示到屏幕，比如选择 MAILBOX 模式可以减少延迟.
 		VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
 		VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
@@ -176,14 +185,14 @@ namespace lve {
 
 		createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
 
+		//调用 vkCreateSwapchainKHR() 来实际创建 swap chain
 		if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create swap chain!");
 		}
 
-		// we only specified a minimum number of images in the swap chain, so the implementation is
-		// allowed to create a swap chain with more. That's why we'll first query the final number of
-		// images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
-		// retrieve the handles.
+		// 我们只指定了交换链中图像的最小数量，所以实现是允许创建更多交换链。
+		// 这就是为什么我们首先要查询最终的数量使用 vkGetSwapchainImagesKHR 获取图像，然后调整容器大小，最后再次调用检索句柄。
+		// 取得相应生成的 swap chain images。
 		vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, nullptr);
 		swapChainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
@@ -192,6 +201,7 @@ namespace lve {
 		swapChainExtent = extent;
 	}
 
+	//为每个 swap chain 图像创造对应的 image view，以便着色器能够访问这些图像.
 	void LVESwapChain::createImageViews() {
 		swapChainImageViews.resize(swapChainImages.size());
 		for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -213,6 +223,7 @@ namespace lve {
 		}
 	}
 
+	//定义了一系列附加说明，包括怎么处理颜色附件与深度附件，以及它们之间依赖关系.
 	void LVESwapChain::createRenderPass() {
 		VkAttachmentDescription depthAttachment{};
 		depthAttachment.format = findDepthFormat();
@@ -274,6 +285,7 @@ namespace lve {
 		}
 	}
 
+	//定义了一系列附加说明，包括怎么处理颜色附件与深度附件，以及它们之间依赖关系.
 	void LVESwapChain::createFramebuffers() {
 		swapChainFramebuffers.resize(imageCount());
 		for (size_t i = 0; i < imageCount(); i++) {
@@ -299,6 +311,7 @@ namespace lve {
 		}
 	}
 
+	//为每个 image view 和 depth attachment 创造 framebuffer，用于最终绘制结果.
 	void LVESwapChain::createDepthResources() {
 		VkFormat depthFormat = findDepthFormat();
 		VkExtent2D swapChainExtent = getSwapChainExtent();
@@ -347,6 +360,7 @@ namespace lve {
 		}
 	}
 
+	//创建并设置用于深度测试所需的一系列 depth images 和对应 views.
 	void LVESwapChain::createSyncObjects() {
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -384,7 +398,8 @@ namespace lve {
 	}
 
 	VkPresentModeKHR LVESwapChain::chooseSwapPresentMode(
-		const std::vector<VkPresentModeKHR>& availablePresentModes) {
+		const std::vector<VkPresentModeKHR>& availablePresentModes) 
+	{
 		for (const auto& availablePresentMode : availablePresentModes) {
 			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 				std::cout << "Present mode: Mailbox" << std::endl;

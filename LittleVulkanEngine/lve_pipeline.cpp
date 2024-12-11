@@ -7,6 +7,11 @@
 #include <cassert>
 
 namespace lve {
+	/*
+		LVEPipeline 类负责 Vulkan 图形管线的创建和管理，
+		涵盖从读取着色器代码到创建图形管线的主要步骤，
+		同时提供了可配置和默认的管线设置。
+	*/
 	LVEPipeline::LVEPipeline(
 		LVEDevice& device,
 		const std::string& vertFilePath,
@@ -16,6 +21,7 @@ namespace lve {
 	}
 
 	LVEPipeline::~LVEPipeline() {
+		//销毁着色器模块和图形管线，确保没有内存泄漏。
 		vkDestroyShaderModule(lveDevice.device(), vertShaderModule, nullptr);
 		vkDestroyShaderModule(lveDevice.device(), fragShaderModule, nullptr);
 		vkDestroyPipeline(lveDevice.device(), graphicsPipeline, nullptr);
@@ -38,6 +44,7 @@ namespace lve {
 
 		return buffer;
 	}
+
 	void LVEPipeline::createGraphicsPipeline(const std::string& vertFilePath, const std::string& fragFilePath, const PipelineConfigInfo& configInfo) {
 		assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
 			"Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
@@ -70,6 +77,7 @@ namespace lve {
 		auto bindingDescriptions = LVEModel::Vertex::getBindingDescriptions();
 		auto attributeDescriptions = LVEModel::Vertex::gettAttributeDescriptions();
 
+		//配置顶点输入状态,保存顶点属性和绑定描述的数量。
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -85,6 +93,9 @@ namespace lve {
 		//viewportInfo.scissorCount = 1;
 		//viewportInfo.pScissors = &configInfo.scissor;
 
+		//配置图形管线的各种状态。
+		//pipelineInfo 包含图形管线的所有创建信息，例如着色器阶段、顶点输入状态、绘制方式（输入装配）、视口状态、光栅化状态、多重采样状态、颜色混合状态、深度模板状态和动态状态等。
+		//使用 configInfo 中传入的各种信息来填充图形管线的信息结构。
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -129,21 +140,28 @@ namespace lve {
 		}
 	}
 
+	//在给定的命令缓冲区中绑定图形管线。
 	void LVEPipeline::bind(VkCommandBuffer commandBuffer) {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	}
 
+	//默认管线配置
+	//定义输入装配、视口、光栅化、多重采样、颜色混合、深度模板和动态状态的配置。
+	//由于这些配置是 Vulkan 管线的基本组成部分，因此提供默认值可以简化管线创建的过程。
 	void LVEPipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
+		// 输入装配状态
 		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
+		// 视口状态
 		configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		configInfo.viewportInfo.viewportCount = 1;
 		configInfo.viewportInfo.pViewports = nullptr;
 		configInfo.viewportInfo.scissorCount = 1;
 		configInfo.viewportInfo.pScissors = nullptr;
 
+		// 光栅化状态 
 		configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
 		configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
@@ -155,6 +173,8 @@ namespace lve {
 		configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
 		configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
 		configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
+
+		// 多重采样状态 
 		configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
 		configInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -162,6 +182,8 @@ namespace lve {
 		configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
 		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
 		configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
+
+		// 颜色混合状态
 		configInfo.colorBlendAttachment.colorWriteMask =
 			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
 			VK_COLOR_COMPONENT_A_BIT;
@@ -181,6 +203,8 @@ namespace lve {
 		configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
 		configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
 		configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+
+		// 深度模板状态 
 		configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
 		configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
@@ -192,6 +216,7 @@ namespace lve {
 		configInfo.depthStencilInfo.front = {};  // Optional
 		configInfo.depthStencilInfo.back = {};   // Optional
 
+		// 动态状态
 		configInfo.dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 		configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();

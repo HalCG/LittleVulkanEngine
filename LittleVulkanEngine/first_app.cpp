@@ -12,7 +12,7 @@ namespace lve {
 
 	struct SimplePushConstantData {
 		glm::vec2 offset;
-		alignas(16) glm::vec3 color;//aligns 处理推送常量字节对齐问题，三角形从红色->蓝色
+		alignas(16) glm::vec3 color;//三角形从红色->蓝色. alignas(16) 来确保数据按照 16 字节对齐，满足 Vulkan 对内存对齐要求。
 	};
 
 	FirstApp::FirstApp() {
@@ -29,7 +29,7 @@ namespace lve {
 	void FirstApp::run() {
 		while (!lveWindow.shouldClose()) {
 			glfwPollEvents();
-			drawFrame();
+			drawFrame();// 绘制当前帧 
 		}
 
 		vkDeviceWaitIdle(lveDevice.device());
@@ -45,6 +45,7 @@ namespace lve {
 		lveModel = std::make_unique<LVEModel>(lveDevice, vertices);
 	}
 
+	//创建了一个包含推送常量范围的管线布局，以便在着色器之间传递动态数据。
 	void FirstApp::createPipelineLayout() {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -67,6 +68,8 @@ namespace lve {
 		}
 	}
 
+	//重建交换链的方法
+	//重交换链时需要检查窗口尺寸，并在设备空闲后确保任何现有资源都已正确清理。
 	void  FirstApp::recreateSwapChain() {
 		auto extent = lveWindow.getExtent();
 		while (extent.width == 0 || extent.height == 0) {
@@ -93,6 +96,7 @@ namespace lve {
 		createPipeline();
 	}
 
+	//配置并创建图形渲染所需的渲染管道，包括指定着色器文件路径和其他设置。
 	void FirstApp::createPipeline() {
 		assert(lveSwapChain != nullptr && "Cannot create pipeline before swap chain");
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
@@ -114,6 +118,7 @@ namespace lve {
 			);
 	}
 
+	//分配、释放以及记录 执行时所需的一系列指令，包括设置视口、裁剪区域，以及绘制指令等。
 	void FirstApp::createCommandBuffers() {
 		commandBuffers.resize(lveSwapChain->imageCount());
 
@@ -133,6 +138,7 @@ namespace lve {
 		commandBuffers.clear();
 	}
 
+	//录制过程中还会利用推送常量来动态改变三角形的位置和颜色
 	void FirstApp::recordCommandBuffer(int imageIndex) {
 		static int frame = 0;
 		frame = (frame + 1) % 10000;
@@ -202,6 +208,7 @@ namespace lve {
 	}
 
 	void FirstApp::drawFrame(){
+		//1. 获取图像索引：调用交换链（swap chain）以获取下一个可用图像。
 		uint32_t imageIndex;
 		auto result = lveSwapChain->acquireNextImage(&imageIndex);
 
@@ -214,6 +221,7 @@ namespace lve {
 			throw std::runtime_error("failed to acquire swap chain image!");
 		}
 
+		//2. 提交命令缓冲区：如果成功获取到图像，会使用命令缓冲区向 GPU 提交渲染命令。
 		recordCommandBuffer(imageIndex);
 		result = lveSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || lveWindow.wasWindowResize()) {
