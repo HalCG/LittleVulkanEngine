@@ -3,6 +3,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "glm/glm.hpp"
+#include <glm/gtc/constants.hpp>
 
 //std
 #include <stdexcept>
@@ -11,17 +12,19 @@
 namespace lve {
 
 	struct SimplePushConstantData {
+		glm::mat2 transform{1.f};//{{1.f,  0.f},{0.f,  1.f}}
 		glm::vec2 offset;
 		alignas(16) glm::vec3 color;//三角形从红色->蓝色. alignas(16) 来确保数据按照 16 字节对齐，满足 Vulkan 对内存对齐要求。
 	};
 
 	FirstApp::FirstApp() {
-		loadModels();
+		loadGameObjects();
 		createPipelineLayout();
 		//createPipeline();
 		recreateSwapChain();//在交换链创建后创建pipeline
 		createCommandBuffers();
 	}
+
 	FirstApp::~FirstApp() {
 		vkDestroyPipelineLayout(lveDevice.device(), pipelineLayout, nullptr);
 	}
@@ -35,14 +38,21 @@ namespace lve {
 		vkDeviceWaitIdle(lveDevice.device());
 	}
 
-	void FirstApp::loadModels() {
+	void FirstApp::loadGameObjects() {
 		std::vector<LVEModel::Vertex> vertices{
 			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},//没有color属性的时候默认是黑色
 			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
 			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 		};
 
-		lveModel = std::make_unique<LVEModel>(lveDevice, vertices);
+		auto lveModel = std::make_shared<LVEModel>(lveDevice, vertices);
+		auto triangle = LVEGameObject::createGameObject();
+		triangle.model = lveModel;
+		triangle.color = { .1f, .8f, .1f };
+		triangle.transform2d.translation.x = .2f;						//平移
+		triangle.transform2d.scale = { 2.f, .5f};						//缩放
+		triangle.transform2d.rotation = .25f * glm::two_pi<float>();	//旋转
+		gameObjects.push_back(std::move(triangle));
 	}
 
 	//创建了一个包含推送常量范围的管线布局，以便在着色器之间传递动态数据。
@@ -140,9 +150,6 @@ namespace lve {
 
 	//录制过程中还会利用推送常量来动态改变三角形的位置和颜色
 	void FirstApp::recordCommandBuffer(int imageIndex) {
-		static int frame = 0;
-		frame = (frame + 1) % 10000;
-
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -179,31 +186,34 @@ namespace lve {
 		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
 
-		lvePipeline->bind(commandBuffers[imageIndex]);
-		//vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
-		lveModel->bind(commandBuffers[imageIndex]);
+		renderGameObjects(commandBuffers[imageIndex]);
+		vkCmdEndRenderPass(commandBuffers[imageIndex]);
+		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+			throw std::runtime_error("failed to record command buffer!");
+		}
+	}
 
-		//draw 之前使用推送常量，多次算然不用位置偏移及颜色的三角形
-		for (int j = 0; j < 4; ++j) {
-			SimplePushConstantData pushConstantData;
-			pushConstantData.offset = { -0.5f + frame * 0.0002f, -0.4f + j * 0.25f };
-			pushConstantData.color = { 0.0f, 0.0f, 0.2f + 0.2f * j };
+	void FirstApp::renderGameObjects(VkCommandBuffer commandBuffer) {
+		lvePipeline->bind(commandBuffer);
+
+		for (auto& obj : gameObjects) {
+			obj.transform2d.rotation = glm::mod(obj.transform2d.rotation + 0.001f, glm::two_pi<float>());
+
+			SimplePushConstantData pushConstantData{};
+			pushConstantData.offset = obj.transform2d.translation;
+			pushConstantData.color = obj.color;
+			pushConstantData.transform = obj.transform2d.mat2();
 
 			vkCmdPushConstants(
-				commandBuffers[imageIndex], 
-				pipelineLayout, 
+				commandBuffer,
+				pipelineLayout,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				sizeof(SimplePushConstantData),
 				&pushConstantData);
 
-			lveModel->draw(commandBuffers[imageIndex]);
-		}
-
-		vkCmdEndRenderPass(commandBuffers[imageIndex]);
-
-		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to record command buffer");
+			obj.model->bind(commandBuffer);
+			obj.model->draw(commandBuffer);
 		}
 	}
 

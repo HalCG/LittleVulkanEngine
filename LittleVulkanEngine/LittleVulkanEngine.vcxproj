@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="first_app.cpp" />
+    <ClCompile Include="lve_game_object.h" />
     <ClCompile Include="lve_model.cpp" />
     <ClCompile Include="lve_pipeline.cpp" />
     <ClCompile Include="lve_swap_chain.cpp" />
