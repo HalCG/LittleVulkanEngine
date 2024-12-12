@@ -157,18 +157,22 @@
     <ClCompile Include="lve_game_object.h" />
     <ClCompile Include="lve_model.cpp" />
     <ClCompile Include="lve_pipeline.cpp" />
+    <ClCompile Include="lve_renderer.cpp" />
     <ClCompile Include="lve_swap_chain.cpp" />
     <ClCompile Include="lve_window.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="lve_window.cpp" />
     <ClCompile Include="lve_device.cpp" />
+    <ClCompile Include="simple_render_system.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h" />
     <ClInclude Include="lve_model.h" />
     <ClInclude Include="lve_pipeline.h" />
     <ClInclude Include="lve_device.h" />
+    <ClInclude Include="lve_renderer.h" />
     <ClInclude Include="lve_swap_chain.h" />
+    <ClInclude Include="simple_render_system.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compile.sh" />

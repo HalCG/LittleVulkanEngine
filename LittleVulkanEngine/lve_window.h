@@ -21,8 +21,8 @@ namespace lve {
 			return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) 
 			}; }
 
-		bool wasWindowResize() { return framebufferResized; }
-		void resetWindowResizeFlag() { framebufferResized = false; }
+		bool wasWindowResized() { return framebufferResized; }
+		void resetWindowResizedFlag() { framebufferResized = false; }
 
 		void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 

@@ -314,6 +314,7 @@ namespace lve {
 	//为每个 image view 和 depth attachment 创造 framebuffer，用于最终绘制结果.
 	void LVESwapChain::createDepthResources() {
 		VkFormat depthFormat = findDepthFormat();
+		swapChainDepthFormat = depthFormat;
 		VkExtent2D swapChainExtent = getSwapChainExtent();
 
 		depthImages.resize(imageCount());

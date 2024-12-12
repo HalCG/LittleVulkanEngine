@@ -45,6 +45,12 @@
     <ClCompile Include="lve_game_object.h">
       <Filter>头文件</Filter>
     </ClCompile>
+    <ClCompile Include="lve_renderer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="simple_render_system.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h">
@@ -60,6 +66,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="lve_swap_chain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_renderer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="simple_render_system.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
