@@ -25,7 +25,7 @@ namespace lve {
 
 		while (!lveWindow.shouldClose()) {
 			glfwPollEvents();
-			
+
 			if (auto commandBuffer = lveRenderer.beginFrame()) {
 				lveRenderer.beginSwapChainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
@@ -37,20 +37,64 @@ namespace lve {
 		vkDeviceWaitIdle(lveDevice.device());
 	}
 
-	void FirstApp::loadGameObjects() {
+	std::unique_ptr<LVEModel>  FirstApp::createCubeModel(LVEDevice& device, glm::vec3 offset)
+	{
 		std::vector<LVEModel::Vertex> vertices{
-			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},//没有color属性的时候默认是黑色
-			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		 // left face (white)
+		 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+		 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+		 {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
+		 {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
+		 {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
+		 {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
+		 // right face (yellow)
+		 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+		 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+		 {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
+		 {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
+		 {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
+		 {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
+		 // top face (orange, remember y axis points down)
+		 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		 {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		 {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		 {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
+		 {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
+		 // bottom face (red)
+		 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		 {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		 {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		 {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
+		 {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
+		 // nose face (blue)
+		 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		 {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		 {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		 {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
+		 {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
+		 // tail face (green)
+		 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+		 {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
+		 {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		 {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
+		 {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
 		};
+		for (auto& v : vertices) {
+			v.position += offset;
+		}
+		return std::make_unique<LVEModel>(device, vertices);
+	}
 
-		auto lveModel = std::make_shared<LVEModel>(lveDevice, vertices);
-		auto triangle = LVEGameObject::createGameObject();
-		triangle.model = lveModel;
-		triangle.color = { .1f, .8f, .1f };
-		triangle.transform2d.translation.x = .2f;						//平移
-		triangle.transform2d.scale = { 2.f, .5f};						//缩放
-		triangle.transform2d.rotation = .25f * glm::two_pi<float>();	//旋转
-		gameObjects.push_back(std::move(triangle));
+	void FirstApp::loadGameObjects() {
+		std::shared_ptr<LVEModel> lveModel = createCubeModel(lveDevice, { .0f, .0f, .0f });
+		auto cube = LVEGameObject::createGameObject();
+		cube.model = lveModel;
+		cube.transform.translation = { .0f, .0f, .5f };
+		cube.transform.scale = { .5f, .5f, .5f };
+		gameObjects.push_back(std::move(cube));
 	}
 };

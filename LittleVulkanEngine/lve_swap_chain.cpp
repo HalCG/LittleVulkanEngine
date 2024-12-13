@@ -17,7 +17,7 @@ namespace lve {
 	}
 
 	LVESwapChain::LVESwapChain(LVEDevice& deviceRef, VkExtent2D extent, std::shared_ptr<LVESwapChain> previous)
-		: device{ deviceRef }, windowExtent{ extent }, oldSwapChain{previous} {
+		: device{ deviceRef }, windowExtent{ extent }, oldSwapChain{ previous } {
 		init();
 
 		// 清理旧交换链，如果不在使用
@@ -86,7 +86,7 @@ namespace lve {
 
 	//提交命令缓冲区到 GPU，并处理呈现结果。此方法包括三个主要步骤：
 	VkResult LVESwapChain::submitCommandBuffers(
-		const VkCommandBuffer* buffers, uint32_t* imageIndex) 
+		const VkCommandBuffer* buffers, uint32_t* imageIndex)
 	{
 		//1. 等待上一个图片完成。
 		if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
@@ -361,7 +361,8 @@ namespace lve {
 		}
 	}
 
-	//创建并设置用于深度测试所需的一系列 depth images 和对应 views.
+	//为 Vulkan 图形应用程序创建同步对象，以便在多帧渲染过程中有效地管理资源和同步操作。
+	// 具体来说，它创建了用于每一帧的信号量（semaphores）和栅栏（fences），以确保图形渲染的正确顺序和同步。
 	void LVESwapChain::createSyncObjects() {
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -399,7 +400,7 @@ namespace lve {
 	}
 
 	VkPresentModeKHR LVESwapChain::chooseSwapPresentMode(
-		const std::vector<VkPresentModeKHR>& availablePresentModes) 
+		const std::vector<VkPresentModeKHR>& availablePresentModes)
 	{
 		for (const auto& availablePresentMode : availablePresentModes) {
 			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {

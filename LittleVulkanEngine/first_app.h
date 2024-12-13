@@ -23,9 +23,9 @@ namespace lve {
 
 		void run();
 
-
 	private:
 		void loadGameObjects();
+		std::unique_ptr<LVEModel> createCubeModel(LVEDevice& device, glm::vec3 offset);
 
 		lve::LVEWindow lveWindow{ WIDTH, HEIGHT, "HelloVulkan!" };
 		lve::LVEDevice lveDevice{ lveWindow };

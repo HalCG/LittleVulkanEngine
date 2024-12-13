@@ -10,8 +10,8 @@ namespace lve{
 	class LVEModel {
 	public:
 		struct Vertex {
-			glm::vec2 position;
-			glm::vec3 color;
+			glm::vec3 position{};
+			glm::vec3 color{};
 
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> gettAttributeDescriptions();
@@ -22,6 +22,9 @@ namespace lve{
 
 		LVEModel(const LVEModel&) = delete;
 		LVEModel& operator=(const LVEModel&) = delete;
+		
+		//LVEModel(LVEModel&&) = delete;
+		//LVEModel& operator=(LVEModel&&) = delete;
 
 		void bind(VkCommandBuffer commandBuffer);
 		void draw(VkCommandBuffer commandBuffer);
