@@ -54,6 +54,9 @@
     <ClCompile Include="lve_camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="keyboard_movement_controller.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h">
@@ -78,6 +81,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="lve_camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="keyboard_movement_controller.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
