@@ -176,7 +176,9 @@
     <ClInclude Include="lve_device.h" />
     <ClInclude Include="lve_renderer.h" />
     <ClInclude Include="lve_swap_chain.h" />
+    <ClInclude Include="lve_utils.hpp" />
     <ClInclude Include="simple_render_system.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compile.sh" />
