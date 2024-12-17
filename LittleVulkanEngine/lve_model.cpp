@@ -4,20 +4,28 @@
 #include <cassert>
 
 namespace lve {
-	LVEModel::LVEModel(LVEDevice& device, const std::vector<Vertex>& vertices) : lveDevice{ device } {
-		createVertexBuffers(vertices);
+	LVEModel::LVEModel(LVEDevice& device, const LVEModel::Builder& builder) : lveDevice{ device } {
+		createVertexBuffers(builder.vertices);
+		createIndexBuffers(builder.indices);
 	}
 
 	LVEModel::~LVEModel() {
 		//当模型对象被销毁时，清理 Vulkan 资源，具体包括销毁顶点缓冲区并释放其相关内存。
 		vkDestroyBuffer(lveDevice.device(), vertexBuffer, nullptr);
 		vkFreeMemory(lveDevice.device(), vertexBufferMemory, nullptr);
+
+		if (hasIndexBuffer) {
+			vkDestroyBuffer(lveDevice.device(), indexBuffer, nullptr);
+			vkFreeMemory(lveDevice.device(), indexBufferMemory, nullptr);
+		}
 	}
 
 	void LVEModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
 		vertexCount = static_cast<uint32_t>(vertices.size());
 		assert(vertexCount >=3 && "Vertex count must be at least 3!");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
+
+#if 0
 		lveDevice.createBuffer(
 			bufferSize,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //顶点缓冲区
@@ -29,11 +37,91 @@ namespace lve {
 		vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);//映射内存，以便可以将顶点数据复制到缓冲区中。
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(lveDevice.device(), vertexBufferMemory);
+#endif
+		/*
+		### 为什么要进行两次拷贝？
+
+			1. **性能考虑**：  
+			   - **staging buffer** 用于在 CPU 和 GPU 之间进行高效的数据传输。使用 `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT` 和 `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT` 使得 CPU 可以直接访问和修改这个缓冲区的内容。通过这种方式，顶点数据可以方便地从 CPU 准备好，然后直接写入这个缓冲区。
+			   - 创建的顶点缓冲区（`vertexBuffer`）使用 `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT` 以便在 GPU 本地内存中，通常可以获得更高的渲染性能。因此，staging buffer 不会直接用于渲染，而是作为一个数据传输途径。
+
+			2. **内存类型**：
+			   - GPU 本地内存通常较慢且难以直接从 CPU 访问，因此它要求通过 staging buffer 先将数据完成一次拷贝。直接将顶点数据复制到 GPU 本地内存可能会遇到无法访问或效率低下的问题。
+
+			3. **数据传输优化**：
+			   - 利用这个流程，您可以更灵活地设计数据传输：确保数据在内存中的排列是合适的，并允许针对不同用途（CPU 操作和 GPU 渲染）进行合适的内存分配。
+		*/
+
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+		//1. 创建临时缓冲区（Staging Buffer）
+		lveDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,//允许其用于传输操作
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//缓冲区是可被主机访问和一致性的（host-visible and coherent）
+			stagingBuffer,
+			stagingBufferMemory);
+
+		//2. 顶点数据复制到 stagingBuffer
+		void* data;
+		vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
+
+		//3. 创建一个 GPU 优化的顶点缓冲区 vertexBuffer，它使用 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT，以确保其在 GPU 本地内存中，这样可以提高渲染性能
+		lveDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			vertexBuffer,
+			vertexBufferMemory);
+
+		//4. 从临时缓冲区复制到顶点缓冲区
+		lveDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+		vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
+	}
+
+	void LVEModel::createIndexBuffers(const std::vector<uint32_t>& indices) {
+		indexCount = static_cast<uint32_t>(indices.size());
+		hasIndexBuffer = indexCount > 0;
+		if (!hasIndexBuffer) {
+			return;
+		}
+		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		lveDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			stagingBuffer,
+			stagingBufferMemory);
+		void* data;
+		vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
+		lveDevice.createBuffer(
+			bufferSize,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			indexBuffer,
+			indexBufferMemory);
+		lveDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+		vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
+		vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
 	}
 
 	void LVEModel::draw(VkCommandBuffer commandBuffer) {//layout error draw->bind
-		//该方法在指定的命令缓冲区中，调用 Vulkan 函数 vkCmdDraw 来绘制模型，使用的顶点数量为 vertexCount。
-		vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+		//该方法在指定的命令缓冲区中，CmdDraw 来绘制模型
+		if (hasIndexBuffer) {
+			vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
+		}
+		else {
+			vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
+		}
 	}
 
 	void LVEModel::bind(VkCommandBuffer commandBuffer) {//layout error bind->draw
@@ -41,6 +129,10 @@ namespace lve {
 		VkBuffer buffers[] = {vertexBuffer};
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+
+		if (hasIndexBuffer) {
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+		}
 	}
 	
 	//用于提供缓冲区的绑定信息
@@ -189,5 +281,80 @@ std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::getAttributeDes
 ### 小结
 - `getBindingDescriptions` 用于提供缓冲区的绑定信息，而 `getAttributeDescriptions` 提供属性（如位置和颜色）的具体格式信息。
 - 映射内存后调用 `vkUnmapMemory` 是必要的，以确保数据正确写入，并告知 Vulkan 内存的访问结束，从而保护内存的有效性和一致性。
+
+*/
+
+
+/*
+在您提供的代码中，有两种方案用于创建和填充 Vulkan 的顶点缓冲区，以下是两者的详细比较：
+
+### 被注释掉的方案：
+
+```cpp
+#if 0
+	lveDevice.createBuffer(
+		bufferSize,
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //顶点缓冲区
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//缓冲区是可被主机访问和一致性的（host-visible and coherent）
+		vertexBuffer,
+		vertexBufferMemory);
+
+	void* data;
+	vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);//映射内存，以便可以将顶点数据复制到缓冲区中。
+	memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+	vkUnmapMemory(lveDevice.device(), vertexBufferMemory);
+#endif
+```
+
+#### 说明：
+1. **创建顶点缓冲区**：这种方法直接使用 `VK_BUFFER_USAGE_VERTEX_BUFFER_BIT` 创建一个顶点缓冲区，意味着这个缓冲区将被用作顶点数据的存储。
+2. **内存属性**：使用 `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`，这表明此缓冲区可以被主机访问，且是一致的，这样可以方便地在 CPU 端直接写入数据。
+3. **直接复制数据**：通过映射内存 (`vkMapMemory`) ，可以直接将内容从 `vertices` 数组复制到 `vertexBuffer` 中。
+
+#### 缺点：
+- 由于使用 `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT`，创建的缓冲区可能性能不高。如果直接在此缓冲区内存上执行 GPU 操作，成本较高，因为数据必须经过 CPU 和 GPU 之间的传输。
+
+### 没有注释的方案：
+
+```cpp
+VkBuffer stagingBuffer;
+VkDeviceMemory stagingBufferMemory;
+
+lveDevice.createBuffer(
+	bufferSize,
+	VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //顶点缓冲区
+	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//缓冲区是可被主机访问和一致性的（host-visible and coherent）
+	stagingBuffer,
+	stagingBufferMemory);
+
+void* data;
+vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
+lveDevice.createBuffer(
+	bufferSize,
+	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+	vertexBuffer,
+	vertexBufferMemory);
+
+lveDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
+vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
+```
+
+#### 说明：
+1. **创建临时缓冲区（Staging Buffer）**：首先创建一个用于数据传输的临时缓冲区 `stagingBuffer`，并使用 `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` 作为其用途，允许其用于传输操作。
+2. **复制数据到临时缓冲区**：首先将顶点数据复制到 `stagingBuffer`，然后创建一个 GPU 优化的顶点缓冲区 `vertexBuffer`，它使用 `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`，以确保其在 GPU 本地内存中，这样可以提高渲染性能。
+3. **从临时缓冲区复制到顶点缓冲区**：使用 `lveDevice.copyBuffer` 将数据从 `stagingBuffer` 复制到 `vertexBuffer`。这一步骤通常在 GPU 之间进行，效率更高。
+4. **清理临时缓冲区**：最后，销毁 `stagingBuffer` 和释放其内存，确保没有内存泄漏。
+
+#### 优点：
+- **性能优化**：通过使用 staging buffer，可以确保顶点数据在 GPU 内存中（`vertexBuffer`），从而提高后续渲染的效率。
+- **保持 CPU 和 GPU 操作的分离**：使用 staging buffer 可以有效地在 CPU 数据准备和 GPU 渲染操作之间分离，从而提升整体性能。
+
+### 总结：
+
+被注释掉的方案适合快速测试和简化的场景，但在性能优化上不如没有注释的方案好。后者利用临时缓冲区技术精确控制数据传输过程，并将 CPU 和 GPU 的操作效率最大化，更适合于实际开发中的使用情况。
 
 */
