@@ -175,24 +175,13 @@ namespace lve {
 	//提供属性（如位置和颜色）的具体格式信息
 	//获取顶点属性描述: 返回顶点输入属性的描述。其中包括顶点的位置信息和颜色信息的格式，绑定位置，偏移量等
 	std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::gettAttributeDescriptions() {
-		std::vector <VkVertexInputAttributeDescription> attributeDescriptions(2);
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, position);
-
-		//此处颜色与顶点位置可以用两个不同bind，也可以使用一个绑定，不同属性偏移
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+		attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
+		attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });
+		attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal) });
+		attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv) });
 
 		return attributeDescriptions;
-		/*
-		return	{
-			{0,0,VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, position)},
-			{0,1,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex, color)}};
-		*/
 	}
 
 	void LVEModel::Builder::loadModel(const std::string& filepath) {
@@ -215,17 +204,12 @@ namespace lve {
 						attrib.vertices[3 * index.vertex_index + 1],
 						attrib.vertices[3 * index.vertex_index + 2],
 					};
-					auto colorIndex = 3 * index.vertex_index + 2;
-					if (colorIndex < attrib.colors.size()) {
-						vertex.color = {
-							attrib.colors[colorIndex - 2],
-							attrib.colors[colorIndex - 1],
-							attrib.colors[colorIndex - 0],
-						};
-					}
-					else {
-						vertex.color = { 1.f, 1.f, 1.f };  // set default color
-					}
+
+					vertex.color = {
+						attrib.colors[3 * index.vertex_index + 0],
+						attrib.colors[3 * index.vertex_index + 1],
+						attrib.colors[3 * index.vertex_index + 2],
+					};
 				}
 				if (index.normal_index >= 0) {
 					vertex.normal = {
