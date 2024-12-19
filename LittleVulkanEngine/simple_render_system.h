@@ -2,6 +2,7 @@
 
 #include "lve_camera.h"
 #include "lve_device.h"
+#include "lve_frame_info.h"
 #include "lve_game_object.h"
 #include "lve_pipeline.h"
 
@@ -22,6 +23,7 @@ namespace lve {
 			VkCommandBuffer commandBuffer,
 			std::vector<LVEGameObject>& gameObjects,
 			const LVECamera& camera);
+		void renderGameObjects(FrameInfo& frameInfo, std::vector<LVEGameObject>& gameObjects);
 	private:
 		void createPipelineLayout();
 		void createPipeline(VkRenderPass renderPass);

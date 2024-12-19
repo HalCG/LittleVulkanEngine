@@ -11,6 +11,8 @@
 //std
 #include <cassert>
 #include <unordered_map>
+#include <memory>
+
 namespace std {
 	template <>
 	struct hash<lve::LVEModel::Vertex> {
@@ -28,16 +30,7 @@ namespace lve {
 		createIndexBuffers(builder.indices);
 	}
 
-	LVEModel::~LVEModel() {
-		//当模型对象被销毁时，清理 Vulkan 资源，具体包括销毁顶点缓冲区并释放其相关内存。
-		vkDestroyBuffer(lveDevice.device(), vertexBuffer, nullptr);
-		vkFreeMemory(lveDevice.device(), vertexBufferMemory, nullptr);
-
-		if (hasIndexBuffer) {
-			vkDestroyBuffer(lveDevice.device(), indexBuffer, nullptr);
-			vkFreeMemory(lveDevice.device(), indexBufferMemory, nullptr);
-		}
-	}
+	LVEModel::~LVEModel() {}
 
 	std::unique_ptr<LVEModel> LVEModel::createModelFromFile(LVEDevice& device, const std::string& filepath) 
 	{
@@ -46,12 +39,12 @@ namespace lve {
 		return std::make_unique<LVEModel>(device, builder);
 	}
 
-	void LVEModel::createVertexBuffers(const std::vector<Vertex>& vertices) 
+	void LVEModel::createVertexBuffers(const std::vector<Vertex>& vertices)
 	{
 		vertexCount = static_cast<uint32_t>(vertices.size());
-		assert(vertexCount >=3 && "Vertex count must be at least 3!");
+		assert(vertexCount >= 3 && "Vertex count must be at least 3!");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
-
+		uint32_t vertexSize = sizeof(vertices[0]);
 #if 0
 		lveDevice.createBuffer(
 			bufferSize,
@@ -68,7 +61,7 @@ namespace lve {
 		/*
 		### 为什么要进行两次拷贝？
 
-			1. **性能考虑**：  
+			1. **性能考虑**：
 			   - **staging buffer** 用于在 CPU 和 GPU 之间进行高效的数据传输。使用 `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT` 和 `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT` 使得 CPU 可以直接访问和修改这个缓冲区的内容。通过这种方式，顶点数据可以方便地从 CPU 准备好，然后直接写入这个缓冲区。
 			   - 创建的顶点缓冲区（`vertexBuffer`）使用 `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT` 以便在 GPU 本地内存中，通常可以获得更高的渲染性能。因此，staging buffer 不会直接用于渲染，而是作为一个数据传输途径。
 
@@ -79,36 +72,30 @@ namespace lve {
 			   - 利用这个流程，您可以更灵活地设计数据传输：确保数据在内存中的排列是合适的，并允许针对不同用途（CPU 操作和 GPU 渲染）进行合适的内存分配。
 		*/
 
-
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-
 		//1. 创建临时缓冲区（Staging Buffer）
-		lveDevice.createBuffer(
-			bufferSize,
+		LVEBuffer stagingBuffer{
+			lveDevice,
+			vertexSize,
+			vertexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,//允许其用于传输操作
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//缓冲区是可被主机访问和一致性的（host-visible and coherent）
-			stagingBuffer,
-			stagingBufferMemory);
+		};
 
 		//2. 顶点数据复制到 stagingBuffer
-		void* data;
-		vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void*)vertices.data());
 
 		//3. 创建一个 GPU 优化的顶点缓冲区 vertexBuffer，它使用 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT，以确保其在 GPU 本地内存中，这样可以提高渲染性能
-		lveDevice.createBuffer(
-			bufferSize,
+		vertexBuffer = std::make_unique<LVEBuffer>(
+			lveDevice,
+			vertexSize,
+			vertexCount,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			vertexBuffer,
-			vertexBufferMemory);
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			);
 
 		//4. 从临时缓冲区复制到顶点缓冲区
-		lveDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-		vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
-		vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
+		lveDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
 	}
 
 	void LVEModel::createIndexBuffers(const std::vector<uint32_t>& indices) {
@@ -118,27 +105,30 @@ namespace lve {
 			return;
 		}
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		lveDevice.createBuffer(
-			bufferSize,
+		uint32_t indexSize = sizeof(indices[0]);
+
+		//src
+		LVEBuffer stagingBuffer{
+			lveDevice,
+			indexSize,
+			indexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory);
-		void* data;
-		vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
-		lveDevice.createBuffer(
-			bufferSize,
+		};
+
+		stagingBuffer.map();
+		stagingBuffer.writeToBuffer((void*)indices.data());
+
+		//dst
+		indexBuffer = std::make_unique<LVEBuffer>(
+			lveDevice,
+			indexSize,
+			indexCount,
 			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			indexBuffer,
-			indexBufferMemory);
-		lveDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-		vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
-		vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+
+		lveDevice.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
 	}
 
 	void LVEModel::draw(VkCommandBuffer commandBuffer) {//layout error draw->bind
@@ -153,12 +143,12 @@ namespace lve {
 
 	void LVEModel::bind(VkCommandBuffer commandBuffer) {//layout error bind->draw
 		//把顶点缓冲区绑定到命令缓冲区，以便后续的绘制命令可以访问该缓冲区。
-		VkBuffer buffers[] = {vertexBuffer};
+		VkBuffer buffers[] = { vertexBuffer->getBuffer() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
 		if (hasIndexBuffer) {
-			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		}
 	}
 	
