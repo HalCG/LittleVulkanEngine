@@ -56,9 +56,9 @@ namespace lve {
 	//将缓冲区的内存映射到 CPU 可访问的地址。
 	VkResult LVEBuffer::map(VkDeviceSize size, VkDeviceSize offset) {
 		assert(buffer && memory && "Called map on buffer before create");
-		if (size == VK_WHOLE_SIZE) {
-			return vkMapMemory(lveDevice.device(), memory, 0, bufferSize, 0, &mapped);
-		}
+		//if (size == VK_WHOLE_SIZE) {
+		//	return vkMapMemory(lveDevice.device(), memory, 0, bufferSize, 0, &mapped);
+		//}
 		return vkMapMemory(lveDevice.device(), memory, offset, size, 0, &mapped);
 	}
 
