@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <array>
 #include <chrono>
+#include <memory>
 
 namespace lve {
 
@@ -30,15 +31,28 @@ namespace lve {
 	}
 
 	void FirstApp::run() {
-		LVEBuffer globalUboBuffer{
-			  lveDevice,
-			  sizeof(GlobalUbo),
-			  LVESwapChain::MAX_FRAMES_IN_FLIGHT,//MAX_FRAMES_IN_FLIGHT  !!!全局使用，约定数量：frame、uboBuffer、render commandBuffers、imageAvailableSemaphores、renderFinishedSemaphores、inFlightFences
-			  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,//未选择一致性，避免干扰正在渲染的缓冲
-			  lveDevice.properties.limits.minUniformBufferOffsetAlignment,
-		};
-		globalUboBuffer.map();
+		//LVEBuffer globalUboBuffer{
+		//	  lveDevice,
+		//	  sizeof(GlobalUbo),
+		//	  LVESwapChain::MAX_FRAMES_IN_FLIGHT,//MAX_FRAMES_IN_FLIGHT  !!!全局使用，约定数量：frame、uboBuffer、render commandBuffers、imageAvailableSemaphores、renderFinishedSemaphores、inFlightFences
+		//	  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		//	  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,//未选择一致性，避免干扰正在渲染的缓冲
+		//	  lveDevice.properties.limits.minUniformBufferOffsetAlignment,
+		//};
+		//globalUboBuffer.map();
+
+		std::vector<std::unique_ptr<LVEBuffer>> uboBuffers(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
+		for (int i = 0; i < uboBuffers.size(); ++i) {
+			uboBuffers[i] = std::make_unique<LVEBuffer>(
+				lveDevice,
+				sizeof(GlobalUbo),
+				1,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+				);
+			uboBuffers[i]->map();
+		}
+
 
 		SimpleRenderSystem simpleRenderSystem{ lveDevice, lveRenderer.getSwapChainRenderPass() };
 		LVECamera camera{};
@@ -70,8 +84,8 @@ namespace lve {
 				// update
 				GlobalUbo ubo{};
 				ubo.projectionView = camera.getProjection() * camera.getView();
-				globalUboBuffer.writeToIndex(&ubo, frameIndex);
-				globalUboBuffer.flushIndex(frameIndex);//!!! 注意 当前渲染管线对应的ubo是再这里刷新，被告知存储位置及长度
+				uboBuffers[frameIndex]->writeToBuffer(&ubo);
+				uboBuffers[frameIndex]->flush();//!!! 注意 当前渲染管线对应的ubo在这里刷新，被告知存储位置及长度
 
 				// render
 				lveRenderer.beginSwapChainRenderPass(commandBuffer);
