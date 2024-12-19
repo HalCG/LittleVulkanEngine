@@ -60,6 +60,9 @@
     <ClCompile Include="lve_game_object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lve_buffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h">
@@ -93,6 +96,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="lve_utils.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_buffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_frame_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
