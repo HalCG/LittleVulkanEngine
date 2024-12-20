@@ -2,6 +2,7 @@
 
 #include "lve_window.h"
 #include "lve_model.h"
+#include "lve_descriptors.h"
 #include "lve_game_object.h"
 #include "lve_renderer.h"
 
@@ -31,6 +32,8 @@ namespace lve {
 		lve::LVEDevice lveDevice{ lveWindow };
 		LVERenderer lveRenderer{lveWindow, lveDevice};
 
+		// 注意：声明的顺序很重要
+		std::unique_ptr<LVEDescriptorPool> globalPool{};
 		std::vector<LVEGameObject> gameObjects;
 	};
 }
