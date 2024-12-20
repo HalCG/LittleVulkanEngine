@@ -24,6 +24,11 @@ namespace lve {
 	};
 
 	FirstApp::FirstApp() {
+		globalPool =
+			LVEDescriptorPool::Builder(lveDevice)
+			.setMaxSets(LVESwapChain::MAX_FRAMES_IN_FLIGHT)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, LVESwapChain::MAX_FRAMES_IN_FLIGHT)
+			.build();
 		loadGameObjects();
 	}
 
@@ -53,8 +58,28 @@ namespace lve {
 			uboBuffers[i]->map();
 		}
 
+		auto globalSetLayout =
+			LVEDescriptorSetLayout::Builder(lveDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.build();
 
-		SimpleRenderSystem simpleRenderSystem{ lveDevice, lveRenderer.getSwapChainRenderPass() };
+		//表示在多帧渲染时，我们需要为每一帧准备一个描述集。这个设定通常用于支持双缓冲或多缓冲渲染，以减少 GPU 和 CPU 之间的等待时间。
+		std::vector<VkDescriptorSet> globalDescriptorSets(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
+
+		//填充描述集：需要描述符集布局、描述符池、描述符具体指向的对象（buffer、image...）
+		for (int i = 0; i < globalDescriptorSets.size(); i++) {
+			auto bufferInfo = uboBuffers[i]->descriptorInfo();
+			LVEDescriptorWriter(*globalSetLayout, *globalPool)		//创建一个描述集写入器对象利用之前创建的描述集布局和描述池。
+				.writeBuffer(0, &bufferInfo)						//将第 0 号绑定位置和对应的缓冲区描述信息写入描述集中。这个缓冲区信息会将数据传递给着色器
+				.build(globalDescriptorSets[i]);					//构建描述集，并将其存储到对应的
+		}
+
+
+		SimpleRenderSystem simpleRenderSystem{
+			lveDevice,
+			lveRenderer.getSwapChainRenderPass(),			//获取交换链的渲染通道，通常包含进行绘图时所需的详细信息。
+			globalSetLayout->getDescriptorSetLayout() };	//取之前创建的全局描述集布局，以便在渲染过程中使用。
+
 		LVECamera camera{};
 		////camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
 		//camera.setViewTarget(glm::vec3(-1.f, -2.f, -2.f), glm::vec3(0.f, 0.f, 2.5f));
@@ -79,8 +104,13 @@ namespace lve {
 
 			if (auto commandBuffer = lveRenderer.beginFrame()) {
 				int frameIndex = lveRenderer.getFrameIndex();
-				FrameInfo frameInfo{ frameIndex, frameTime, commandBuffer, camera };
-				
+				FrameInfo frameInfo{
+					frameIndex,
+					frameTime,
+					commandBuffer,
+					camera,
+					globalDescriptorSets[frameIndex] };
+
 				// update
 				GlobalUbo ubo{};
 				ubo.projectionView = camera.getProjection() * camera.getView();

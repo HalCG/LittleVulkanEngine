@@ -13,19 +13,16 @@
 namespace lve {
 	class SimpleRenderSystem {
 	public:
-		SimpleRenderSystem(LVEDevice& device, VkRenderPass renderPass);
+		SimpleRenderSystem(
+			LVEDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 		~SimpleRenderSystem();
 
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-		void renderGameObjects(
-			VkCommandBuffer commandBuffer,
-			std::vector<LVEGameObject>& gameObjects,
-			const LVECamera& camera);
 		void renderGameObjects(FrameInfo& frameInfo, std::vector<LVEGameObject>& gameObjects);
 	private:
-		void createPipelineLayout();
+		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);
 
 		LVEDevice& lveDevice;
