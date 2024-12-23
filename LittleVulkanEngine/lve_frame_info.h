@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lve_camera.h"
+#include "lve_game_object.h"
 
 // lib
 #include <vulkan/vulkan.h>
@@ -12,5 +13,6 @@ namespace lve {
 		VkCommandBuffer commandBuffer;
 		LVECamera& camera;
 		VkDescriptorSet globalDescriptorSet;
+		LVEGameObject::Map& gameObjects;
 	};
 }  // namespace lve

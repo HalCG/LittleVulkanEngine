@@ -6,6 +6,8 @@
 
 // std
 #include <memory>
+#include <unordered_map>
+
 namespace lve {
     struct TransformComponent {
         glm::vec3 translation{};
@@ -23,6 +25,8 @@ namespace lve {
     class LVEGameObject {
     public:
         using id_t = unsigned int;
+        using Map = std::unordered_map<id_t, LVEGameObject>;
+
         static LVEGameObject createGameObject() {
             static id_t currentId = 0;
             return LVEGameObject{ currentId++ };

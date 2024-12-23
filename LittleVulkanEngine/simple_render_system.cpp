@@ -66,7 +66,7 @@ namespace lve {
 			pipelineConfig);
 	}
 
-	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo, std::vector<LVEGameObject>& gameObjects)
+	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		lvePipeline->bind(frameInfo.commandBuffer);
 
@@ -81,7 +81,9 @@ namespace lve {
 			0,									//动态偏移数量为 0，表示我们没有额外的动态偏移需要应用。
 			nullptr);
 
-		for (auto& obj : gameObjects) {
+		for (auto& kv : frameInfo.gameObjects) {
+			auto& obj = kv.second;
+			if (obj.model == nullptr) continue;
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.normalMatrix();
