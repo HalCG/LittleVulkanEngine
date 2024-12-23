@@ -5,13 +5,17 @@ layout(location = 1) in vec3 color;
 layout(location = 2) in vec3 normal;
 layout(location = 3) in vec2 uv;
 
+//µ±¶¥µã×ÅÉ«Æ÷Ö´ĞĞÍêºó£¬OpenGL»á×Ô¶¯ÔÚ¶¥µãÖ®¼ä²åÖµÕâĞ©Êä³ö±äÁ¿¡£
+//ÓÉÓÚOpenGLÍ¨³£Ê¹ÓÃÏßĞÔ²åÖµ£¬fragNormalWorld±äÁ¿½«¸ù¾İ¶¥µãµÄÈ¨ÖØ£¨¼´¸÷¶¥µãÔÚµ±Ç°Æ¬¶ÎÖĞµÄ±ÈÖØ£©½øĞĞ²åÖµ¡£
 layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 fragPosWorld;
+layout(location = 2) out vec3 fragNormalWorld;
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projectionViewMatrix;
   vec4 ambientLightColor;	// »·¾³¹â£¬w ·ÖÁ¿±íÊ¾¹âÇ¿
   vec3 lightPosition;
-  vec4 lightColor;			//µã¹âÔ´µÄÑÕÉ«£¬°üÀ¨Ò»¸öÓÃÓÚ±íÊ¾¹âÇ¿µÄ w ·ÖÁ¿¡£
+  vec4 lightColor;			//µã¹âÔ´£¬w ·ÖÁ¿±íÊ¾¹âÇ¿
 } ubo;
 
 layout(push_constant) uniform PushConstantData{//Ã¿¸ö×ÅÉ«Æ÷Èë¿ÚµãÖ»ÄÜÊ¹ÓÃÒ»¸ö³£Á¿ÍÆËÍ¿é
@@ -20,22 +24,95 @@ layout(push_constant) uniform PushConstantData{//Ã¿¸ö×ÅÉ«Æ÷Èë¿ÚµãÖ»ÄÜÊ¹ÓÃÒ»¸ö³£Á
 }pushConstantData;
 
 void main(){
-	vec4 positionWorld = pushConstantData.modelMatrix * vec4(position, 1.0);
-	gl_Position = ubo.projectionViewMatrix * positionWorld;
+		vec4 positionWorld = pushConstantData.modelMatrix * vec4(position, 1.0);
+		gl_Position = ubo.projectionViewMatrix * positionWorld;
 
-	vec3 normalWorldSpace = normalize(mat3(pushConstantData.normalMatrix) * normal);
 
-	//¼ÆËãµ½¹âÔ´µÄ·½Ïò¡¢¹âÕÕË¥¼õÖµ£¨»ùÓÚ¹âÔ´Î»ÖÃºÍ¶¥µãÎ»ÖÃµÄ¾àÀë£©ÒÔ¼°¹âÔ´ÑÕÉ«¡£
-	vec3 directionToLight = ubo.lightPosition - positionWorld.xyz;
-	float attenuation = 1.0 / dot(directionToLight, directionToLight); // Ë¥¼õÒò×Ó£º¾àÀëÆ½·½µÄµ¹Êı£¨1.0 /£©¡£Ëæ×Å¾àÀëµÄÔö¼Ó£¬attenuation µÄÖµ»á¼õÉÙ£¬´Ó¶øÄ£Äâ¹âÔ´µÄË¥¼õ£¨¹âÔ´Ô½Ô¶£¬¹âÇ¿Ô½Èõ£©¡£
-
-	//¼ÆËã¹âÔ´µÄÑÕÉ«¼°ÆäÇ¿¶È£¬²¢¿¼ÂÇµ½¹âÔ´Óë¶¥µãÖ®¼äµÄË¥¼õ£¨¼´¾àÀëË¥¼õ£©
-	vec3 lightColor = ubo.lightColor.xyz * ubo.lightColor.w * attenuation;//ÑÕÉ« * Ç¿¶È * Ë¥¼õÒø×Ó
-
-	//¼ÆËãÂş·´Éä¹â£¬Ê¹ÓÃ·¨ÏßÓë¹âÔ´·½ÏòÖ®¼äµÄµã»ı£¬È·±£²»Îª¸ºÖµ¡£
-	vec3 ambientLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
-	vec3 diffuseLight = lightColor * max(dot(normalWorldSpace, normalize(directionToLight)), 0);
-
-	//½«Âş·´Éä¹â¡¢»·¾³¹âÓë¶¥µãÑÕÉ«½øĞĞ½áºÏ£¬µÃµ½×îÖÕµÄÆ¬¶ÎÑÕÉ«Êä³ö¡£
-	fragColor = (diffuseLight + ambientLight) * color;
+		fragNormalWorld = normalize(mat3(pushConstantData.normalMatrix) * normal);
+		fragPosWorld = positionWorld.xyz;
+		fragColor = color;
 	}
+
+/*
+ÔÚOpenGLäÖÈ¾¹ÜÏßÖĞ£¬¶¥µã×ÅÉ«Æ÷ºÍÆ¬¶Î×ÅÉ«Æ÷Ö®¼äµÄÊı¾İ´«µİÍ¨³£ÊÇÍ¨¹ı²åÖµÊµÏÖµÄ¡£ÔÚÄãÌá¹©µÄ´úÂëÆ¬¶ÎÖĞ£¬·¨ÏòÁ¿ÊÇÈçºÎ´Ó¶¥µã×ÅÉ«Æ÷´«µİµ½Æ¬¶Î×ÅÉ«Æ÷µÄ£¬Ö÷ÒªÊÇÍ¨¹ı**varying**±äÁ¿£¨»òÔÚÏÖ´úOpenGLÖĞ³ÆÎª**out**±äÁ¿£©À´Íê³ÉµÄ¡£
+
+### ²åÖµ¹ı³Ì
+
+1. **±äÁ¿ÉùÃ÷**£º
+   ÔÚ¶¥µã×ÅÉ«Æ÷ÖĞ£¬Ê×ÏÈĞèÒªÉùÃ÷Ò»¸öÊä³ö±äÁ¿£¨ÀıÈç`fragNormalWorld`£©£¬Ëü½«ÓÃ×÷ÓëÆ¬¶Î×ÅÉ«Æ÷Ö®¼äµÄÁ¬½Ó¡£ÕâÍ¨³£»áÊ¹ÓÃ `out` ¹Ø¼ü×Ö£º
+
+   ```glsl
+   // ¶¥µã×ÅÉ«Æ÷
+   out vec3 fragNormalWorld;
+   ```
+
+2. **·¨ÏòÁ¿¼ÆËã**£º
+   ÔÚ¶¥µã×ÅÉ«Æ÷ÖĞ£¬Äã¼ÆËã·¨ÏòÁ¿µÄÊÀ½ç×ø±ê£¬²¢½«Æä¸³Öµ¸øÕâ¸öÊä³ö±äÁ¿¡£±ÈÈç£¬ÄãµÄ´úÂëÖĞÓĞÒÔÏÂĞĞ£º
+
+   ```glsl
+   fragNormalWorld = normalize(mat3(pushConstantData.normalMatrix) * normal);
+   ```
+
+   È·±£ÄãÒÑ¾­½« `normal` µÄÊı¾İ´«µİ¸ø¶¥µã×ÅÉ«Æ÷£¬²¢½áºÏÄ£ĞÍµÄ·¨ÏòÁ¿±ä»»À´»ñÈ¡ÊÀ½ç¿Õ¼äÖĞµÄ·¨ÏòÁ¿¡£
+
+3. **Ä¬ÈÏ²åÖµ**£º
+   µ±¶¥µã×ÅÉ«Æ÷Ö´ĞĞÍêºó£¬OpenGL»á×Ô¶¯ÔÚ¶¥µãÖ®¼ä²åÖµÕâĞ©Êä³ö±äÁ¿¡£ÔÚÆ¬¶Î×ÅÉ«Æ÷ÖĞ£¬ÄãĞèÒªÉùÃ÷Óë¶¥µã×ÅÉ«Æ÷Ïà¶ÔÓ¦µÄÊäÈë±äÁ¿£¨ÀıÈç`fragNormalWorld`£©£¬Ê¹ÓÃ `in` ¹Ø¼ü×Ö£º
+
+   ```glsl
+   // Æ¬¶Î×ÅÉ«Æ÷
+   in vec3 fragNormalWorld;
+   ```
+
+4. **Ê¹ÓÃ²åÖµºóµÄ·¨ÏòÁ¿**£º
+   ÔÚÆ¬¶Î×ÅÉ«Æ÷ÖĞ£¬½ÓÊÕµ½µÄ `fragNormalWorld` ¾ÍÊÇÍ¨¹ıÍ¼ĞÎ¹ÜÏßÖĞ²åÖµ²Ù×÷µÃµ½µÄ¡£ÓÉÓÚOpenGLÍ¨³£Ê¹ÓÃÏßĞÔ²åÖµ£¬`fragNormalWorld`±äÁ¿½«¸ù¾İ¶¥µãµÄÈ¨ÖØ£¨¼´¸÷¶¥µãÔÚµ±Ç°Æ¬¶ÎÖĞµÄ±ÈÖØ£©½øĞĞ²åÖµ¡£
+
+### ´úÂëÊ¾Àı
+
+ÏÂÃæÊÇÒ»¸ö¼òµ¥µÄÊ¾ÀıÀ´Õ¹Ê¾ÈçºÎÔÚ¶¥µã×ÅÉ«Æ÷ºÍÆ¬¶Î×ÅÉ«Æ÷ÖĞÊµÏÖÕâÖÖ²åÖµ£º
+
+```glsl
+// ¶¥µã×ÅÉ«Æ÷
+#version 330 core
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec4 color;
+
+out vec3 fragNormalWorld;
+out vec3 fragPosWorld;
+out vec4 fragColor;
+
+uniform mat4 modelMatrix;
+uniform mat4 projectionViewMatrix;
+uniform mat4 normalMatrix;
+
+void main() {
+    vec4 positionWorld = modelMatrix * vec4(position, 1.0);
+    gl_Position = projectionViewMatrix * positionWorld;
+
+    fragNormalWorld = normalize(mat3(normalMatrix) * normal);
+    fragPosWorld = positionWorld.xyz;
+    fragColor = color;
+}
+
+// Æ¬¶Î×ÅÉ«Æ÷
+#version 330 core
+
+in vec3 fragNormalWorld;
+in vec3 fragPosWorld;
+in vec4 fragColor;
+
+out vec4 color;
+
+void main() {
+    // Ê¹ÓÃ²åÖµºóµÄ·¨Ïß½øĞĞ¹âÕÕ¼ÆËã
+    // ...
+    color = fragColor; // »òÕß½øĞĞÆäËû²Ù×÷
+}
+```
+
+### ×Ü½á
+
+×ÛÉÏËùÊö£¬Í¨¹ıÔÚ¶¥µã×ÅÉ«Æ÷ÖĞ¶¨ÒåÊä³ö±äÁ¿²¢ÔÚÆ¬¶Î×ÅÉ«Æ÷ÖĞ¶¨Òå¶ÔÓ¦µÄÊäÈë±äÁ¿£¬OpenGL»á×Ô¶¯½øĞĞ²åÖµ´¦Àí£¬Ê¹µÃ·¨ÏòÁ¿£¨»òÆäËûÊôĞÔ£©ÄÜ¹»ÔÚ¶¥µã×ÅÉ«Æ÷ÓëÆ¬¶Î×ÅÉ«Æ÷Ö®¼äË³Àû´«µİ¡£Ï£ÍûÕâ¸ö½âÊÍ¶ÔÄãÀí½â²åÖµ¹ı³ÌÓĞËù°ïÖú£¡Èç¹ûÄã»¹ÓĞÆäËûÎÊÌâ»òĞèÒª¸üÉîÈëµÄÏ¸½Ú£¬»¶Ó­¼ÌĞøÌÖÂÛ¡£
+
+*/
