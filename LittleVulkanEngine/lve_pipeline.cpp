@@ -74,8 +74,8 @@ namespace lve {
 		shaderStages[1].pNext = nullptr;
 		shaderStages[1].pSpecializationInfo = nullptr;
 
-		auto bindingDescriptions = LVEModel::Vertex::getBindingDescriptions();
-		auto attributeDescriptions = LVEModel::Vertex::gettAttributeDescriptions();
+		auto& bindingDescriptions = configInfo.bindingDescriptions;
+		auto& attributeDescriptions = configInfo.attributeDescriptions;
 
 		//配置顶点输入状态,保存顶点属性和绑定描述的数量。
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
@@ -222,6 +222,9 @@ namespace lve {
 		configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
 		configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
 		configInfo.dynamicStateInfo.flags = 0;
+
+		configInfo.bindingDescriptions = LVEModel::Vertex::getBindingDescriptions();
+		configInfo.attributeDescriptions = LVEModel::Vertex::getAttributeDescriptions();
 	}
 }
 
