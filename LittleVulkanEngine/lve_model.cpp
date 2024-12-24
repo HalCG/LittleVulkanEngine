@@ -164,7 +164,7 @@ namespace lve {
 
 	//提供属性（如位置和颜色）的具体格式信息
 	//获取顶点属性描述: 返回顶点输入属性的描述。其中包括顶点的位置信息和颜色信息的格式，绑定位置，偏移量等
-	std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::gettAttributeDescriptions() {
+	std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::getAttributeDescriptions() {
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 		attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
 		attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });

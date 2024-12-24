@@ -66,6 +66,10 @@ namespace lve {
 			pipelineConfig);
 	}
 
+	/*
+		记录所有需要的命令（包括绑定描述集、更新推送常量、绘制命令等）到命令缓冲区。这一阶段称为 命令记录（Command Recording）。
+		所有绘制操作的命令记录在 commandBuffer 中，最终的渲染结果会通过这个命令缓冲区来实现。你可以在提交这个命令缓冲区后通过交换链将结果呈现到屏幕上。
+	*/
 	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		lvePipeline->bind(frameInfo.commandBuffer);
@@ -96,7 +100,7 @@ namespace lve {
 				sizeof(SimplePushConstantData),
 				&push);
 			obj.model->bind(frameInfo.commandBuffer);
-			obj.model->draw(frameInfo.commandBuffer);
+			obj.model->draw(frameInfo.commandBuffer);//draw 方法确实只是将绘制命令记录到 commandBuffer 中，而不是直接进行绘制。
 		}
 	}
 }  // namespace lve
