@@ -226,6 +226,19 @@ namespace lve {
 		configInfo.bindingDescriptions = LVEModel::Vertex::getBindingDescriptions();
 		configInfo.attributeDescriptions = LVEModel::Vertex::getAttributeDescriptions();
 	}
+
+	void LVEPipeline::enableAlphaBlending(PipelineConfigInfo& configInfo) {
+		configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+		configInfo.colorBlendAttachment.colorWriteMask =											//指定了哪些颜色分量可以被写入到帧缓冲中。
+			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+			VK_COLOR_COMPONENT_A_BIT;
+		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;			//设置源颜色的混合因子
+		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;	//设置目标颜色的混合因子
+		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;								//源颜色和目标颜色直接相加
+		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;					//源 Alpha 混合因子设置为 VK_BLEND_FACTOR_ONE，意味着源 Alpha 值完全参与混合。
+		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;					//目标 Alpha 混合因子设为 VK_BLEND_FACTOR_ZERO，表示目标 Alpha 值不影响混合结果。
+		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;								//设置 Alpha 混合操作为 VK_BLEND_OP_ADD，同样是加法操作
+	}
 }
 
 //绘制三角形时的错误信息：
