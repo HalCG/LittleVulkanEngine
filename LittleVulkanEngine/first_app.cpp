@@ -3,13 +3,14 @@
 #include "keyboard_movement_controller.h"
 #include "lve_buffer.h"
 #include "lve_camera.h"
-#include "simple_render_system.h"
 #include "point_light_system.h"
+#include "simple_render_system.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "glm/glm.hpp"
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp> // 包含 rotate 函数
 
 //std
 #include <stdexcept>
@@ -18,14 +19,6 @@
 #include <memory>
 
 namespace lve {
-
-	struct GlobalUbo {
-		glm::mat4 projection{ 1.f };
-		glm::mat4 view{ 1.f };
-		glm::vec4 ambientLightColor{ 1.f, 1.f, 1.f, .02f };		// w表示光强
-		glm::vec3 lightPosition{ -1.f };
-		alignas(16) glm::vec4 lightColor{ 1.f };				// w表示光强
-	};
 
 	FirstApp::FirstApp() {
 		globalPool =
@@ -40,16 +33,6 @@ namespace lve {
 	}
 
 	void FirstApp::run() {
-		//LVEBuffer globalUboBuffer{
-		//	  lveDevice,
-		//	  sizeof(GlobalUbo),
-		//	  LVESwapChain::MAX_FRAMES_IN_FLIGHT,//MAX_FRAMES_IN_FLIGHT  !!!全局使用，约定数量：frame、uboBuffer、render commandBuffers、imageAvailableSemaphores、renderFinishedSemaphores、inFlightFences
-		//	  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		//	  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,//未选择一致性，避免干扰正在渲染的缓冲
-		//	  lveDevice.properties.limits.minUniformBufferOffsetAlignment,
-		//};
-		//globalUboBuffer.map();
-
 		std::vector<std::unique_ptr<LVEBuffer>> uboBuffers(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < uboBuffers.size(); ++i) {
 			uboBuffers[i] = std::make_unique<LVEBuffer>(
@@ -90,8 +73,6 @@ namespace lve {
 							globalSetLayout->getDescriptorSetLayout() };
 
 		LVECamera camera{};
-		////camera.setViewDirection(glm::vec3(0.f), glm::vec3(0.5f, 0.f, 1.f));
-		//camera.setViewTarget(glm::vec3(-1.f, -2.f, -2.f), glm::vec3(0.f, 0.f, 2.5f));
 
 		auto viewerObject = LVEGameObject::createGameObject();
 		viewerObject.transform.translation.z = -2.5f;
@@ -109,8 +90,6 @@ namespace lve {
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = lveRenderer.getAspectRatio();
-			//camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
-			//camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
 			if (auto commandBuffer = lveRenderer.beginFrame()) {
@@ -127,6 +106,7 @@ namespace lve {
 				GlobalUbo ubo{};
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				pointLightSystem.update(frameInfo, ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();//!!! 注意 当前渲染管线对应的ubo在这里刷新，被告知存储位置及长度
 
@@ -148,6 +128,7 @@ namespace lve {
 	}
 
 	void FirstApp::loadGameObjects() {
+		//obj
 		std::shared_ptr<LVEModel> lveModel =
 			LVEModel::createModelFromFile(lveDevice, "C:/Users/tolcf/Desktop/models/flat_vase.obj");
 		auto flatVase = LVEGameObject::createGameObject();
@@ -169,6 +150,27 @@ namespace lve {
 		floor.transform.translation = { 0.f, .5f, 0.f };
 		floor.transform.scale = { 3.f, 1.f, 3.f };
 		gameObjects.emplace(floor.getId(), std::move(floor));
+
+		//light
+		std::vector<glm::vec3> lightColors{
+			{1.f, .1f, .1f},
+			{.1f, .1f, 1.f},
+			{.1f, 1.f, .1f},
+			{1.f, 1.f, .1f},
+			{.1f, 1.f, 1.f},
+			{1.f, 1.f, 1.f}  //
+		};
+
+		for (int i = 0; i < lightColors.size(); i++) {
+			auto pointLight = LVEGameObject::makePointLight(0.2f);
+			pointLight.color = lightColors[i];
+			auto rotateLight = glm::rotate(
+				glm::mat4(1.f),
+				(i * glm::two_pi<float>()) / lightColors.size(),
+				{ 0.f, -1.f, 0.f });
+			pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+			gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+		}
 	}
 };
 

@@ -5,6 +5,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp> // 包含 rotate 函数
 
 // std
 #include <array>
@@ -12,6 +13,12 @@
 #include <stdexcept>
 
 namespace lve {
+
+	struct PointLightPushConstants {
+		glm::vec4 position{};
+		glm::vec4 color{};
+		float radius;
+	};
 
 	PointLightSystem::PointLightSystem(
 		LVEDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
@@ -25,10 +32,10 @@ namespace lve {
 	}
 
 	void PointLightSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
-		// VkPushConstantRange pushConstantRange{};
-		// pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		// pushConstantRange.offset = 0;
-		// pushConstantRange.size = sizeof(SimplePushConstantData);
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(PointLightPushConstants);
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
@@ -36,8 +43,8 @@ namespace lve {
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 		if (vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
 			VK_SUCCESS) {
 			throw std::runtime_error("failed to create pipeline layout!");
@@ -61,6 +68,27 @@ namespace lve {
 			pipelineConfig);
 	}
 
+	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
+		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, { 0.f, -1.f, 0.f });//引入帧时间，实现点光源动态旋转
+		int lightIndex = 0;
+		for (auto& kv : frameInfo.gameObjects) {
+			auto& obj = kv.second;
+			if (obj.pointLight == nullptr) continue;
+
+			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
+
+			// 更新光源位置
+			obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
+
+			// ubo赋值
+			ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
+			ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+
+			lightIndex += 1;
+		}
+		ubo.numLights = lightIndex;
+	}
+
 	//执行渲染操作
 	void PointLightSystem::render(FrameInfo& frameInfo) {
 		//绑定管道到命令缓冲区。
@@ -78,6 +106,26 @@ namespace lve {
 			nullptr);
 
 		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+
+		//更新推送常量后，draw，因为多个点光源，每个点光源的颜色、位置、大小都同
+		for (auto& kv : frameInfo.gameObjects) {
+			auto& obj = kv.second;
+			if (obj.pointLight == nullptr) continue;
+
+			PointLightPushConstants push{};
+			push.position = glm::vec4(obj.transform.translation, 1.f);
+			push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+			push.radius = obj.transform.scale.x;
+
+			vkCmdPushConstants(
+				frameInfo.commandBuffer,
+				pipelineLayout,
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+				0,
+				sizeof(PointLightPushConstants),
+				&push);
+			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+		}
 	}
 
 }  // namespace lve
