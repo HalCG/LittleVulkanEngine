@@ -90,6 +90,7 @@ namespace lve {
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = lveRenderer.getAspectRatio();
+			//camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
 			if (auto commandBuffer = lveRenderer.beginFrame()) {
@@ -106,6 +107,7 @@ namespace lve {
 				GlobalUbo ubo{};
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				ubo.inverseView = camera.getInverseView();
 				pointLightSystem.update(frameInfo, ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();//!!! 注意 当前渲染管线对应的ubo在这里刷新，被告知存储位置及长度
