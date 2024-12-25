@@ -66,6 +66,9 @@
     <ClCompile Include="lve_descriptors.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="point_light_system.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="first_app.h">
@@ -110,6 +113,9 @@
     <ClInclude Include="lve_descriptors.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="point_light_system.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compile.sh">
@@ -119,6 +125,12 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\sample_shader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_light.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_light.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

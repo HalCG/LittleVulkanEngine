@@ -11,12 +11,17 @@ layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragPosWorld;
 layout(location = 2) out vec3 fragNormalWorld;
 
+struct PointLight {
+  vec4 position; // ignore w
+  vec4 color; // w ÊÇÇ¿¶È
+};
+
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
   vec4 ambientLightColor;	// »·¾³¹â£¬w ·ÖÁ¿±íÊ¾¹âÇ¿
-  vec3 lightPosition;
-  vec4 lightColor;			//µã¹âÔ´£¬w ·ÖÁ¿±íÊ¾¹âÇ¿
+  PointLight pointLights[10];
+  int numLights;
 } ubo;
 
 layout(push_constant) uniform PushConstantData{//Ã¿¸ö×ÅÉ«Æ÷Èë¿ÚµãÖ»ÄÜÊ¹ÓÃÒ»¸ö³£Á¿ÍÆËÍ¿é
@@ -25,13 +30,13 @@ layout(push_constant) uniform PushConstantData{//Ã¿¸ö×ÅÉ«Æ÷Èë¿ÚµãÖ»ÄÜÊ¹ÓÃÒ»¸ö³£Á
 }pushConstantData;
 
 void main(){
-		vec4 positionWorld = pushConstantData.modelMatrix * vec4(position, 1.0);
-		gl_Position = ubo.projection * ubo.view * positionWorld;
+	vec4 positionWorld = pushConstantData.modelMatrix * vec4(position, 1.0);
+	gl_Position = ubo.projection * ubo.view * positionWorld;
 
-		fragNormalWorld = normalize(mat3(pushConstantData.normalMatrix) * normal);
-		fragPosWorld = positionWorld.xyz;
-		fragColor = color;
-	}
+	fragNormalWorld = normalize(mat3(pushConstantData.normalMatrix) * normal);
+	fragPosWorld = positionWorld.xyz;
+	fragColor = color;
+}
 
 /*
 ÔÚOpenGLäÖÈ¾¹ÜÏßÖĞ£¬¶¥µã×ÅÉ«Æ÷ºÍÆ¬¶Î×ÅÉ«Æ÷Ö®¼äµÄÊı¾İ´«µİÍ¨³£ÊÇÍ¨¹ı²åÖµÊµÏÖµÄ¡£ÔÚÄãÌá¹©µÄ´úÂëÆ¬¶ÎÖĞ£¬·¨ÏòÁ¿ÊÇÈçºÎ´Ó¶¥µã×ÅÉ«Æ÷´«µİµ½Æ¬¶Î×ÅÉ«Æ÷µÄ£¬Ö÷ÒªÊÇÍ¨¹ı**varying**±äÁ¿£¨»òÔÚÏÖ´úOpenGLÖĞ³ÆÎª**out**±äÁ¿£©À´Íê³ÉµÄ¡£
