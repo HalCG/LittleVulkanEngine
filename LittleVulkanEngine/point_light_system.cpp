@@ -10,6 +10,7 @@
 // std
 #include <array>
 #include <cassert>
+#include <map>
 #include <stdexcept>
 
 namespace lve {
@@ -57,6 +58,7 @@ namespace lve {
 		//设置渲染通道和管道布局，并清除属性描述和绑定描述（可能是为了自定义）。
 		PipelineConfigInfo pipelineConfig{};
 		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig);
+		LVEPipeline::enableAlphaBlending(pipelineConfig);
 		pipelineConfig.attributeDescriptions.clear(); 
 		pipelineConfig.bindingDescriptions.clear();
 		pipelineConfig.renderPass = renderPass;
@@ -69,7 +71,7 @@ namespace lve {
 	}
 
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
-		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, { 0.f, -1.f, 0.f });//引入帧时间，实现点光源动态旋转
+		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, { 0.f, -1.f, 0.f });//引入帧时间，实现点光源动态旋转（0.1f 减速）
 		int lightIndex = 0;
 		for (auto& kv : frameInfo.gameObjects) {
 			auto& obj = kv.second;
@@ -91,6 +93,18 @@ namespace lve {
 
 	//执行渲染操作
 	void PointLightSystem::render(FrameInfo& frameInfo) {
+		// 排序光源
+		std::map<float, LVEGameObject::id_t> sorted;
+		for (auto& kv : frameInfo.gameObjects) {
+			auto& obj = kv.second;
+			if (obj.pointLight == nullptr) continue;
+
+			// 计算距离
+			auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			float disSquared = glm::dot(offset, offset);
+			sorted[disSquared] = obj.getId();
+		}
+
 		//绑定管道到命令缓冲区。
 		lvePipeline->bind(frameInfo.commandBuffer);
 
@@ -108,10 +122,13 @@ namespace lve {
 		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
 
 		//更新推送常量后，draw，因为多个点光源，每个点光源的颜色、位置、大小都同
-		for (auto& kv : frameInfo.gameObjects) {
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
-
+		//for (auto& kv : frameInfo.gameObjects) {
+		//	auto& obj = kv.second;
+		//	if (obj.pointLight == nullptr) continue;
+		
+		// 以相反的顺序迭代排序的灯
+		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+			auto& obj = frameInfo.gameObjects.at(it->second);
 			PointLightPushConstants push{};
 			push.position = glm::vec4(obj.transform.translation, 1.f);
 			push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
