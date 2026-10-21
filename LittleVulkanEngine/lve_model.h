@@ -12,13 +12,18 @@
 #include <memory>
 
 namespace lve{
+	/**
+	 * GPU ç½‘æ ¼èµ„æºã€‚
+	 * Vertex location å¿…é¡»ä¸ sample_shader.vert çš„ layout(location=â€¦) ä¸€è‡´ã€‚
+	 * åˆ›å»ºæ—¶ç» staging æ‹·åˆ° DEVICE_LOCAL é¡¶ç‚¹/ç´¢å¼•ç¼“å†²ã€‚
+	 */
 	class LVEModel {
 	public:
 		struct Vertex {
-			glm::vec3 position{};
-			glm::vec3 color{};
-			glm::vec3 normal{};
-			glm::vec2 uv{};
+			glm::vec3 position{};  // location 0
+			glm::vec3 color{};     // location 1
+			glm::vec3 normal{};    // location 2
+			glm::vec2 uv{};        // location 3
 
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
@@ -29,6 +34,7 @@ namespace lve{
 			}
 		};
 
+		/** CPU ä¾§è£…è½½ï¼švertices/indicesï¼›loadModel ç”¨ tinyobj è¯» .obj */
 		struct Builder {
 			std::vector<Vertex> vertices{};
 			std::vector<uint32_t> indices{};
@@ -40,9 +46,6 @@ namespace lve{
 
 		LVEModel(const LVEModel&) = delete;
 		LVEModel& operator=(const LVEModel&) = delete;
-		
-		//LVEModel(LVEModel&&) = delete;
-		//LVEModel& operator=(LVEModel&&) = delete;
 
 		static std::unique_ptr<LVEModel> createModelFromFile(
 			LVEDevice& device, const std::string& filepath);
@@ -64,12 +67,3 @@ namespace lve{
 		uint32_t indexCount;
 	};
 }
-
-
-/*
-1. **`#define GLM_FORCE_RADIANS`**
-   ÕâĞĞ´úÂëÇ¿ÖÆ GLM ÔÚÈı½Çº¯Êı£¨ÀıÈç `sin`¡¢`cos` µÈ£©ºÍ½Ç¶ÈÏà¹ØµÄ²Ù×÷ÖĞÊ¹ÓÃ»¡¶ÈÖÆ£¬¶ø²»ÊÇÄ¬ÈÏµÄ½Ç¶ÈÖÆ¡£ÕâÊÇÒòÎªÔÚÍ¼ĞÎ±à³ÌÖĞ£¬ºÜ¶àÇé¿öÏÂÉæ¼°µ½½Ç¶ÈµÄ¼ÆËãÊ¹ÓÃ»¡¶È¸üÎª³£¼û£¬Óë OpenGL µÄÊıÑ§¼ÆËã±ê×¼ÏàÎÇºÏ¡£
-
-2. **`#define GLM_FORCE_DEPTH_ZERO_TO_ONE`**
-   ¸ÃĞĞ´úÂëÖ¸¶¨ GLM Ê¹ÓÃÉî¶È·¶Î§´ÓÁãµ½Ò»µÄ±ê×¼£¬¶ø²»ÊÇÄ¬ÈÏµÄ´Ó¸ºÖµµ½ÕıÖµµÄÉî¶È·¶Î§¡£ÕâÍ¨³£ÓÃÓÚÄ³Ğ©ÏÖ´úµÄÍ¼ĞÎ API ÖĞ£¬ÕâÑùÉî¶ÈÖµ¸üÒ×ÓÚÓëÆÁÄ»×ø±êºÍÉî¶È»º³åÇøµÄ´¢´æ·½Ê½Ïà¼æÈİ¡£
-*/

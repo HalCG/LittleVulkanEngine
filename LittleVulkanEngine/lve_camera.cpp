@@ -6,6 +6,7 @@
 
 namespace lve {
 
+	// æ­£äº¤æŠ•å½±ï¼šleft/right/top/bottom ä¸ºè§†æ™¯ä½“è¾¹ç•Œï¼›near/far æ·±åº¦ï¼ˆVulkan [0,1]ï¼‰
 	void LVECamera::setOrthographicProjection(
 		float left, float right, float top, float bottom, float near, float far) {
 		projectionMatrix = glm::mat4{ 1.0f };
@@ -17,6 +18,7 @@ namespace lve {
 		projectionMatrix[3][2] = -near / (far - near);
 	}
 
+	// é€è§†æŠ•å½±ï¼šfovy å‚ç›´è§†åœºï¼ˆå¼§åº¦ï¼‰ï¼Œaspect=å®½/é«˜ï¼›åŒ¹é… GLM_FORCE_DEPTH_ZERO_TO_ONE
 	void LVECamera::setPerspectiveProjection(float fovy, float aspect, float near, float far) {
 		assert(glm::abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
 		const float tanHalfFovy = tan(fovy / 2.f);
@@ -67,6 +69,7 @@ namespace lve {
 
 	void LVECamera::setViewYXZ(glm::vec3 position, glm::vec3 rotation) {
 		const float c3 = glm::cos(rotation.z);
+		// YXZï¼šç”¨æ—‹è½¬æ„é€ ç›¸æœºåŸºå‘é‡ u/v/wï¼Œå†å¡« view ä¸ inverseViewï¼ˆä½ç½®åœ¨ inverseView[3]ï¼‰
 		const float s3 = glm::sin(rotation.z);
 		const float c2 = glm::cos(rotation.x);
 		const float s2 = glm::sin(rotation.x);
@@ -104,76 +107,3 @@ namespace lve {
 		inverseViewMatrix[3][2] = position.z;
 	}
 }  // namespace lve
-
-/*
-Õâ¶Î´úÂë¶¨ÒåÁËÒ»¸öÃûÎª `LVECamera` µÄÀàÖĞµÄÁ½¸öº¯Êı£¬·Ö±ğÓÃÓÚÉèÖÃÕı½»Í¶Ó°£¨`setOrthographicProjection`£©ºÍÍ¸ÊÓÍ¶Ó°£¨`setPerspectiveProjection`£©µÄÍ¶Ó°¾ØÕó¡£ÕâÁ½¸öÍ¶Ó°ÉèÖÃÓÃÓÚÍ¼ĞÎ±à³Ì£¬ÒÔ½øĞĞ3DäÖÈ¾Ê±µÄÏà»úÊÓÍ¼¡£ÒÔÏÂÊÇ¶ÔÃ¿¸öº¯ÊıµÄÏêÏ¸½âÊÍ£¬°üÀ¨²ÎÊıµÄÊıÑ§ºÍ¼¸ºÎº¬Òå¡£
-
-### 1. Õı½»Í¶Ó° (setOrthographicProjection)
-
-º¯ÊıÔ­ĞÍ£º
-```cpp
-void LVECamera::setOrthographicProjection(float left, float right, float top, float bottom, float near, float far);
-```
-
-#### ²ÎÊı:
-- **left**: ÊÓ¿ÚµÄ×ó±ß½ç¡£
-- **right**: ÊÓ¿ÚµÄÓÒ±ß½ç¡£
-- **top**: ÊÓ¿ÚµÄÉÏ±ß½ç¡£
-- **bottom**: ÊÓ¿ÚµÄÏÂ±ß½ç¡£
-- **near**: ½ü²ÃÃæ¾àÀë£¬Ïà»úµ½×î½üµÄäÖÈ¾Æ½ÃæµÄ¾àÀë¡£
-- **far**: Ô¶²ÃÃæ¾àÀë£¬Ïà»úµ½×îÔ¶µÄäÖÈ¾Æ½ÃæµÄ¾àÀë¡£
-
-#### ÊıÑ§º¬Òå:
-Õı½»Í¶Ó°½«ÈıÎ¬¿Õ¼äÖĞµÄµãÍ¶Ó°µ½Ò»¸ö¶şÎ¬Æ½ÃæÉÏ£¬±£³ÖÎïÌåµÄÏà¶Ô´óĞ¡£¬²»ÊÜÉãÏñ»úÓëÎïÌå¾àÀëµÄÓ°Ïì¡£ËüÍ¨¹ı½«ÈıÎ¬×ø±êÖ±½ÓÓ³Éäµ½¶şÎ¬×ø±êÀ´ÊµÏÖÕâÖÖĞ§¹û¡£
-
-#### º¯ÊıÊµÏÖ:
-```cpp
-projectionMatrix = glm::mat4{1.0f};
-```
-³õÊ¼»¯Îªµ¥Î»¾ØÕó¡£
-
-ºóÃæµÄ¼¸ĞĞÊµÏÖÁËÕı½»Í¶Ó°¾ØÕóµÄ¹¹½¨£º
-- `projectionMatrix[0][0] = 2.f / (right - left);` ¶¨ÒåÁËÔÚxÖá·½ÏòÉÏµÄËõ·ÅÒò×Ó¡£
-- `projectionMatrix[1][1] = 2.f / (bottom - top);` ¶¨ÒåÁËÔÚyÖá·½ÏòÉÏµÄËõ·ÅÒò×Ó¡£
-- `projectionMatrix[2][2] = 1.f / (far - near);` ¶¨ÒåÁËÔÚzÖá·½ÏòÉÏµÄËõ·ÅÒò×Ó£¬Ê¹µÃÉî¶ÈÖµÄÜ¹»±»Ñ¹Ëõµ½[0, 1]·¶Î§¡£
-- `projectionMatrix[3][0]`¡¢`projectionMatrix[3][1]` ºÍ `projectionMatrix[3][2]` ÓÃÓÚÆ½ÒÆ£¬Ê¹µÃÊÓ¿ÚµÄÖĞĞÄ¶ÔÓ¦ÓÚ£¨0,0,0£©µÄ×ø±ê¡£
-
-### 2. Í¸ÊÓÍ¶Ó° (setPerspectiveProjection)
-
-º¯ÊıÔ­ĞÍ£º
-```cpp
-void LVECamera::setPerspectiveProjection(float fovy, float aspect, float near, float far);
-```
-
-#### ²ÎÊı:
-- **fovy**: ÊÓ³¡½Ç£¨FoV£©ÔÚyÖáÉÏ£¨ÒÔ»¡¶ÈÎªµ¥Î»£©£¬±íÊ¾Ïà»úµÄ¡°ÊÓÒ°¡±µÄ´óĞ¡¡£
-- **aspect**: ÊÓ¿ÚµÄ¿í¸ß±È£¨¿í¶È/¸ß¶È£©£¬Ö¸¶¨Í¼Ïñ¿í¶ÈÓë¸ß¶ÈÖ®±È¡£
-- **near**: ½ü²ÃÃæ¾àÀë¡£
-- **far**: Ô¶²ÃÃæ¾àÀë¡£
-
-#### ÊıÑ§º¬Òå:
-Í¸ÊÓÍ¶Ó°Ä£ÄâÈËÑÛµÄÊÓÒ°£¬Ê¹Ô¶´¦µÄÎïÌå¿´ÆğÀ´¸üĞ¡£¬´Ó¶ø²úÉúÉî¶È¸Ğ¡£ÓëÕı½»Í¶Ó°²»Í¬£¬Í¸ÊÓÍ¶Ó°»á¸ù¾İ¾àÀëÓ°ÏìÎïÌåµÄÊÓ¾õ´óĞ¡¡£
-
-#### º¯ÊıÊµÏÖ:
-```cpp
-assert(glm::abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
-```
-È·±£¿í¸ß±È²»ÎªÁã¡£
-
-½ÓÏÂÀ´£¬¼ÆËãÊÓ½ÇµÄÇĞÏßÖµ£º
-```cpp
-const float tanHalfFovy = tan(fovy / 2.f);
-```
-Õâ´ú±íÁËÊÓ½ÇµÄÒ»°ëµÄÇĞÏßÖµ¡£
-
-Í¨¹ıÒÔÏÂ¼¸ĞĞ¹¹½¨Í¸ÊÓÍ¶Ó°¾ØÕó£º
-- `projectionMatrix[0][0] = 1.f / (aspect * tanHalfFovy);` ¶¨ÒåÁËxÖáµÄËõ·ÅÒò×Ó£¬¿¼ÂÇÁË¿í¸ß±È¡£
-- `projectionMatrix[1][1] = 1.f / (tanHalfFovy);` ¶¨ÒåÁËyÖáµÄËõ·ÅÒò×Ó¡£
-- `projectionMatrix[2][2] = far / (far - near);` ÕâÒ»Ïî¶ÔÓ¦µÄµãÖØÓ³Éä£¬Ê¹µÃÉî¶ÈÒ»ÖÂ¡£
-- `projectionMatrix[2][3] = 1.f;` Éè¶¨Æë´Î×ø±ê£¬ÓÉÓÚÍ¸ÊÓÍ¶Ó°µÄÌØĞÔ£¬zÖµµÄ×ª»»ÖÁ¹ØÖØÒª¡£
-- `projectionMatrix[3][2] = -(far * near) / (far - near);` Õâ¸öÏîÓÃÓÚÉèÖÃÉî¶ÈÆ«ÒÆ£¬½«Éî¶ÈÖµÊÊµ±µØÓ³Éäµ½·¶Î§ÄÚ¡£
-
-### ×Ü½á
-Õâ¶Î´úÂëÍ¨¹ıÊµÏÖÁ½¸öºËĞÄº¯ÊıÀ´ÉèÖÃÏà»úµÄÍ¶Ó°¾ØÕó£¬ÓÃÓÚ²»Í¬ÀàĞÍµÄäÖÈ¾ĞèÇó¡£Õı½»Í¶Ó°±£³ÖÎïÌåµÄÏà¶Ô´óĞ¡£¬ÊÊÓÃÓÚ2DÊÓÍ¼ºÍÄ³Ğ©3DÇé¾³£¬¶øÍ¸ÊÓÍ¶Ó°Îª3D¿Õ¼äÌá¹©ÁËÉî¶ÈºÍÕæÊµ¸Ğ¡£Àí½âÕâĞ©Í¶Ó°ÀàĞÍ¼°Æä²ÎÊıµÄ¼¸ºÎºÍÊıÑ§»ù´¡ÊÇ¼ÆËã»úÍ¼ĞÎÑ§ÖĞµÄÖØÒª²¿·Ö¡£
-
-*/

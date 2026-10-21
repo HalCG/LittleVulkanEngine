@@ -11,6 +11,11 @@
 #include <vector>
 
 namespace lve {
+	/**
+	 * 网格前向渲染系统。
+	 * - 管线：sample_shader（GlobalUbo + push model/normal matrix）
+	 * - 跳过 model==nullptr 的对象（如纯点光、viewer）
+	 */
 	class SimpleRenderSystem {
 	public:
 		SimpleRenderSystem(

@@ -7,25 +7,24 @@
 #include <unordered_map>
 #include <vector>
 
-//ÊµÏÖÁË Vulkan ÃèÊö·û¼¯²¼¾Ö£¨LVEDescriptorSetLayout£©¡¢ÃèÊö·û³Ø (LVEDescriptorPool) ÒÔ¼°ÃèÊö·ûĞ´ÈëÆ÷£¨LVEDescriptorWriter£©¡£
 namespace lve {
 
-	//LVEDescriptorSetLayout ÀàÖ÷ÒªÓÃÓÚ¹ÜÀí Vulkan µÄÃèÊö·û¼¯²¼¾Ö£¬ÃèÊö·û¼¯²¼¾Ö¶¨ÒåÁËÒ»¸öÃèÊö·û¼¯ÖĞµÄ¹Ì¶¨²¼¾ÖºÍÀàĞÍ¡£ÃèÊö·û¼¯ÓÃÓÚÔÚ×ÅÉ«Æ÷³ÌĞòÖĞ·ÃÎÊ»º³åÇøºÍÍ¼Ïñ×ÊÔ´¡£
+	/**
+	 * æè¿°ç¬¦é›†å¸ƒå±€ï¼šè§„å®š set å†…å„ binding çš„ç±»å‹ä¸å¯è®¿é—®çš„ shader é˜¶æ®µã€‚
+	 * å¯¹åº”ç€è‰²å™¨ layout(set=?, binding=?)ã€‚
+	 */
 	class LVEDescriptorSetLayout {
 	public:
-		//Ê¹ÓÃ½¨ÔìÕßÄ£Ê½À´¹¹½¨ LVEDescriptorSetLayout ¶ÔÏó¡£
 		class Builder {
 		public:
 			Builder(LVEDevice& lveDevice) : lveDevice{ lveDevice } {}
 
-			//ÓÃÓÚÌí¼Ó°ó¶¨ĞÅÏ¢£¬°üº¬°ó¶¨Ë÷Òı¡¢ÃèÊö·ûÀàĞÍ¡¢Ê¹ÓÃµÄ shader ½×¶ÎºÍ°ó¶¨ÊıÁ¿¡£
 			Builder& addBinding(
 				uint32_t binding,
 				VkDescriptorType descriptorType,
 				VkShaderStageFlags stageFlags,
 				uint32_t count = 1);
 
-			//¹¹½¨×îÖÕµÄ LVEDescriptorSetLayout¡£
 			std::unique_ptr<LVEDescriptorSetLayout> build() const;
 
 		private:
@@ -33,12 +32,10 @@ namespace lve {
 			std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings{};
 		};
 
-		//LVEDescriptorPool ÀàÓÃÓÚ¹ÜÀí Vulkan ÃèÊö·û³Ø£¬ÃèÊö·û³ØÊÇÓÃÀ´·ÖÅäÒ»×éÃèÊö·û¼¯µÄ¡£
 		LVEDescriptorSetLayout(
 			LVEDevice& lveDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings);
 		~LVEDescriptorSetLayout();
 
-		//½ûÓÃ¿½±´¹¹ÔìºÍ¸³Öµ,±ÜÃâ²»±ØÒªµÄ×ÊÔ´¿½±´¡£±£»¤ GPU ×ÊÔ´µÄÍêÕûĞÔ£¬È·±£×ÊÔ´µÄ°²È«Ê¹ÓÃ¡£
 		LVEDescriptorSetLayout(const LVEDescriptorSetLayout&) = delete;
 		LVEDescriptorSetLayout& operator=(const LVEDescriptorSetLayout&) = delete;
 
@@ -52,20 +49,19 @@ namespace lve {
 		friend class LVEDescriptorWriter;
 	};
 
-	//LVEDescriptorPool ÀàÓÃÓÚ¹ÜÀí Vulkan ÃèÊö·û³Ø£¬ÃèÊö·û³ØÊÇÓÃÀ´·ÖÅäÒ»×éÃèÊö·û¼¯µÄ¡£
+	/**
+	 * æè¿°ç¬¦æ± ï¼šæŒ‰ç±»å‹é¢„ç•™é¢åº¦ï¼Œä»ä¸­åˆ†é… VkDescriptorSetã€‚
+	 * maxSets / poolSizes åœ¨åˆ›å»ºæ—¶å›ºå®šï¼Œä¸å¤Ÿæ—¶éœ€æ›´å¤§æ± æˆ–é‡ç½®ã€‚
+	 */
 	class LVEDescriptorPool {
 	public:
 		class Builder {
 		public:
 			Builder(LVEDevice& lveDevice) : lveDevice{ lveDevice } {}
 
-			//Ìí¼ÓÃèÊö·ûÀàĞÍºÍÊıÁ¿¡£
 			Builder& addPoolSize(VkDescriptorType descriptorType, uint32_t count);
-			//ÉèÖÃ³ØµÄ±êÖ¾¡£
 			Builder& setPoolFlags(VkDescriptorPoolCreateFlags flags);
-			//ÉèÖÃ×î´óÃèÊö·û¼¯ÊıÁ¿¡£
 			Builder& setMaxSets(uint32_t count);
-			//¹¹½¨×îÖÕµÄ LVEDescriptorPool¡£
 			std::unique_ptr<LVEDescriptorPool> build() const;
 
 		private:
@@ -75,7 +71,6 @@ namespace lve {
 			VkDescriptorPoolCreateFlags poolFlags = 0;
 		};
 
-		//³õÊ¼»¯ÃèÊö·û³ØµÄ´óĞ¡¡¢±êÖ¾ºÍ³Ø´óĞ¡¡£
 		LVEDescriptorPool(
 			LVEDevice& lveDevice,
 			uint32_t maxSets,
@@ -83,16 +78,12 @@ namespace lve {
 			const std::vector<VkDescriptorPoolSize>& poolSizes);
 		~LVEDescriptorPool();
 
-		//½ûÓÃ¿½±´¹¹ÔìºÍ¸³Öµ,±ÜÃâ²»±ØÒªµÄ×ÊÔ´¿½±´¡£±£»¤ GPU ×ÊÔ´µÄÍêÕûĞÔ£¬È·±£×ÊÔ´µÄ°²È«Ê¹ÓÃ¡£
 		LVEDescriptorPool(const LVEDescriptorPool&) = delete;
 		LVEDescriptorPool& operator=(const LVEDescriptorPool&) = delete;
 
-		//´Ó³ØÖĞ·ÖÅäÒ»¸öÃèÊö·û¼¯¡£
 		bool allocateDescriptor(
 			const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptor) const;
-		//ÊÍ·Å¶à¸öÃèÊö·û¼¯¡£
 		void freeDescriptors(std::vector<VkDescriptorSet>& descriptors) const;
-		//ÖØÖÃÃèÊö·û³Ø£¬ÒÔ±ãÖØĞÂÊ¹ÓÃ¡£
 		void resetPool();
 
 	private:
@@ -102,19 +93,18 @@ namespace lve {
 		friend class LVEDescriptorWriter;
 	};
 
-	//LVEDescriptorWriter ÀàÓÃÓÚ¼ò»¯¶ÔÃèÊö·û¼¯µÄĞ´Èë²Ù×÷£¬Ëü½«ÃèÊö·û¼¯²¼¾ÖºÍÃèÊö·û³ØµÄ¹¦ÄÜÕûºÏÔÚÒ»Æğ¡£
+	/**
+	 * æè¿°ç¬¦å†™å…¥å™¨ï¼šæŒ‰ layout å¡« WriteDescriptorSetï¼Œallocate + updateã€‚
+	 * å…¸å‹é“¾ï¼šWriter(layout, pool).writeBuffer(0, &info).build(set);
+	 */
 	class LVEDescriptorWriter {
 	public:
 		LVEDescriptorWriter(LVEDescriptorSetLayout& setLayout, LVEDescriptorPool& pool);
 
-		//ÓÃÓÚÏòÃèÊö·û¼¯ÖĞĞ´Èë»º³åÇøĞÅÏ¢¡£
 		LVEDescriptorWriter& writeBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo);
-		//ÓÃÓÚÏòÃèÊö·û¼¯ÖĞĞ´ÈëÍ¼ÏñĞÅÏ¢¡£
 		LVEDescriptorWriter& writeImage(uint32_t binding, VkDescriptorImageInfo* imageInfo);
 
-		//¹¹½¨Êµ¼ÊµÄÃèÊö·û¼¯¡£
 		bool build(VkDescriptorSet& set);
-		//ÖØĞ´ÒÑ´æÔÚµÄÃèÊö·û¼¯¡£
 		void overwrite(VkDescriptorSet& set);
 
 	private:

@@ -11,24 +11,22 @@ namespace lve {
 	void KeyboardMovementController::moveInPlaneXZ(
 		GLFWwindow* window, float dt, LVEGameObject& gameObject) {
 
-		/// 1. ÒÆ¶¯
+		/// 1. æ—‹è½¬ï¼ˆæ–¹å‘é”®ï¼‰ï¼špitch=xï¼Œyaw=y
 		glm::vec3 rotate{ 0 };
-		//¼ÆËãĞı×ª
 		if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
 		if (glfwGetKey(window, keys.lookLeft) == GLFW_PRESS) rotate.y -= 1.f;
 		if (glfwGetKey(window, keys.lookUp) == GLFW_PRESS) rotate.x += 1.f;
 		if (glfwGetKey(window, keys.lookDown) == GLFW_PRESS) rotate.x -= 1.f;
 
-		//Ó¦ÓÃĞı×ª
 		if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon()) {
 			gameObject.transform.rotation += lookSpeed * dt * glm::normalize(rotate);
 		}
 
-		//ÏŞÖÆ½Ç¶È
+		// é™åˆ¶ä¿¯ä»°ï¼Œåèˆªå–æ¨¡åˆ° [0, 2Ï€)
 		gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
 		gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
 
-		/// 2. Ğı×ª
+		/// 2. å¹³ç§»ï¼ˆWASD/EQï¼‰ï¼šåœ¨ XZ å¹³é¢ç›¸å¯¹æœå‘ç§»åŠ¨
 		float yaw = gameObject.transform.rotation.y;
 		const glm::vec3 forwardDir{ sin(yaw), 0.f, cos(yaw) };
 		const glm::vec3 rightDir{ forwardDir.z, 0.f, -forwardDir.x };
@@ -36,7 +34,7 @@ namespace lve {
 
 		glm::vec3 moveDir{ 0.f };
 
-		//¼ÆËãÒÆ¶¯·½Ïò
+		//è®¡ç®—ç§»åŠ¨æ–¹å‘
 		if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) moveDir += forwardDir;
 		if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= forwardDir;
 		if (glfwGetKey(window, keys.moveRight) == GLFW_PRESS) moveDir += rightDir;
@@ -44,96 +42,9 @@ namespace lve {
 		if (glfwGetKey(window, keys.moveUp) == GLFW_PRESS) moveDir += upDir;
 		if (glfwGetKey(window, keys.moveDown) == GLFW_PRESS) moveDir -= upDir;
 
-		//Ó¦ÓÃÒÆ¶¯
+		//åº”ç”¨ç§»åŠ¨
 		if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
 			gameObject.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
 		}
 	}
 }  // namespace lve
-
-/*
-Õâ¶Î´úÂëÀ´×ÔÒ»¸ö´¦Àí¼üÅÌÒÆ¶¯¿ØÖÆµÄÀà `KeyboardMovementController`£¬Ê¹ÓÃ OpenGL µÄ GLFW ¿âÀ´´¦ÀíÓÃ»§ÊäÈë£¬²¢Í¨¹ı GLM ¿â´¦ÀíÏòÁ¿ºÍ¾ØÕóÔËËã¡£´úÂëµÄÖ÷Òª¹¦ÄÜÊÇ¿ØÖÆÓÎÏ·¶ÔÏóÔÚÒ»¸öÈıÎ¬Æ½ÃæÄÚµÄÒÆ¶¯ºÍĞı×ª¡£
-
-ÒÔÏÂÊÇ¶Ô´úÂëµÄÏêÏ¸½â¶Á£¬ÌØ±ğÊÇ½Ç¶È¼ÆËãÏà¹ØµÄÊıÑ§¼¸ºÎ²¿·Ö£º
-
-### 1. ´úÂë½á¹¹
-
-- **Í·ÎÄ¼ş**£ºÒıÈëÁË×ÔÉíµÄ `keyboard_movement_controller.h`£¬ÒÔ¼° GLM ºÍ±ê×¼¿â `<limits>`¡£
-- **ÃüÃû¿Õ¼ä**£ºËùÓĞÄÚÈİ¶¼·â×°ÔÚ `lve` ÃüÃû¿Õ¼äÖĞ£¬±ÜÃâÓëÆäËû¿âµÄÃüÃû³åÍ»¡£
-- **º¯Êı `moveInPlaneXZ`**£ºÕâ¸öº¯ÊıÊµÏÖÁËÍ¨¹ı¼üÅÌ¿ØÖÆÓÎÏ·¶ÔÏóÔÚ XZ Æ½ÃæµÄÒÆ¶¯ºÍĞı×ª¡£
-
-### 2. Ğı×ª¿ØÖÆ
-
-```cpp
-glm::vec3 rotate{ 0 };
-if (glfwGetKey(window, keys.lookRight) == GLFW_PRESS) rotate.y += 1.f;
-if (glfwGetKey(window, keys.lookLeft) == GLFW_PRESS) rotate.y -= 1.f;
-if (glfwGetKey(window, keys.lookUp) == GLFW_PRESS) rotate.x += 1.f;
-if (glfwGetKey(window, keys.lookDown) == GLFW_PRESS) rotate.x -= 1.f;
-```
-
-Õâ²¿·Ö´úÂëÍ¨¹ı¼ì²é°´ÏÂµÄ¼üÀ´¾ö¶¨Ğı×ªµÄ·½Ïò¡£Ğı×ªÏòÁ¿ `rotate` ¶¨ÒåÁËÔÚ X£¨ÉÏÏÂĞı×ª£©ºÍ Y£¨×óÓÒĞı×ª£©·½ÏòµÄĞı×ªÁ¿¡£¸ù¾İ°´ÏÂµÄ·½Ïò¼ü£¬`rotate` ÏòÁ¿µÄÏàÓ¦×ø±ê»áÔö¼Ó»ò¼õÉÙ¡£
-
-### 3. Ğı×ªÓ¦ÓÃ
-
-```cpp
-if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon()) {
-	gameObject.transform.rotation += lookSpeed * dt * glm::normalize(rotate);
-}
-```
-
-ÕâÀïÊ¹ÓÃÁË `glm::dot` À´¼ì²é `rotate` ÏòÁ¿ÊÇ·ñÓĞĞ§£¨¼´·ÇÁãÏòÁ¿£©£¬È»ºóÓÃĞı×ªËÙ¶È `lookSpeed` ºÍÊ±¼ä²½³¤ `dt` ³ËÒÔ¹éÒ»»¯µÄĞı×ªÏòÁ¿£¬¸üĞÂÓÎÏ·¶ÔÏóµÄĞı×ª¡£¹éÒ»»¯ÊÇÈ·±£Ğı×ª²»»áÒòĞı×ªÁ¿µÄ´óĞ¡¶ø·Å´ó»òËõĞ¡¡£
-
-### 4. ÏŞÖÆ½Ç¶È
-
-```cpp
-gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
-gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
-```
-
-- ¶Ô `x`£¨¸©Ñö½Ç£©½øĞĞÏŞÖÆ£¬Ê¹ÆäÔÚ -1.5 µ½ 1.5 »¡¶ÈÖ®¼ä£¬»ù±¾ÉÏÏàµ±ÓÚÔ¼ ¡À85 ¶È¡£ÕâÊÇÎªÁËÏŞÖÆÊÓ½Ç£¬·ÀÖ¹ÓÃ»§·­×ª»ò¹ı¶ÈÌ§Í·¡£
-- Ê¹ÓÃ `glm::mod` º¯Êı½« `y`£¨Æ«º½½Ç£©ÏŞÖÆÔÚ 0 µ½ 2¦Ğ ·¶Î§ÄÚ£¬È·±£Æ«º½½ÇÊÇºÏ·¨µÄ£¨¼´±£³ÖÔÚÒ»¸öÍêÕûµÄ360¶ÈĞı×ªÄÚ£©¡£
-
-### 5. ¼ÆËãÒÆ¶¯·½Ïò
-
-```cpp
-float yaw = gameObject.transform.rotation.y;
-const glm::vec3 forwardDir{ sin(yaw), 0.f, cos(yaw) };
-const glm::vec3 rightDir{ forwardDir.z, 0.f, -forwardDir.x };
-const glm::vec3 upDir{ 0.f, -1.f, 0.f };
-```
-
-- `yaw` ±íÊ¾ÓÎÏ·¶ÔÏóµ±Ç°µÄÆ«º½½Ç£¨ÈÆ Y ÖáµÄĞı×ª£©£¬Í¨¹ıÕıÏÒºÍÓàÏÒº¯Êı¼ÆËã³öÇ°½ø·½ÏòµÄÏòÁ¿ `forwardDir`¡£
-- Ç°½ø·½Ïò `forwardDir` ¶¨ÒåÎª `(sin(yaw), 0, cos(yaw))`£¬ÕâÊÇÒòÎªÎÒÃÇÖ»ÔÚ XZ Æ½ÃæÉÏÒÆ¶¯£¬Y Öµ¹Ì¶¨Îª 0¡£
-- ÓÒ²à·½ÏòÏòÁ¿ `rightDir` µÄ¼ÆËãÊÇÍ¨¹ıÈ¡ `forwardDir` µÄÕı½»ÏòÁ¿µÃµ½µÄ£¬±íÊ¾ÏòÓÒµÄÒÆ¶¯·½Ïò¡£
-- `upDir` ¶¨ÒåÎª `(0, -1, 0)`£¬±íÊ¾ÏòÉÏµÄ·½Ïò£¨Ïà¶ÔÓÚ¸º Y ·½Ïò£©£¬Í¨³£ÓÃÓÚ´¦ÀíÉÏÏÂÒÆ¶¯¡£
-
-### 6. ÒÆ¶¯¿ØÖÆ
-
-```cpp
-glm::vec3 moveDir{ 0.f };
-if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) moveDir += forwardDir;
-if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= forwardDir;
-if (glfwGetKey(window, keys.moveRight) == GLFW_PRESS) moveDir += rightDir;
-if (glfwGetKey(window, keys.moveLeft) == GLFW_PRESS) moveDir -= rightDir;
-if (glfwGetKey(window, keys.moveUp) == GLFW_PRESS) moveDir += upDir;
-if (glfwGetKey(window, keys.moveDown) == GLFW_PRESS) moveDir -= upDir;
-```
-
-ÕâÒ»²¿·Ö¸ù¾İ°´ÏÂµÄ¼üÀ´¾ö¶¨ÒÆ¶¯·½ÏòÏòÁ¿ `moveDir`¡£Ã¿¸ö·½ÏòµÄ°´¼ü¸üĞÂ¶ÔÓ¦µÄ `moveDir` ÏòÁ¿¡£
-
-### 7. Ó¦ÓÃÒÆ¶¯
-
-```cpp
-if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
-	gameObject.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
-}
-```
-
-×îºó£¬ÀàËÆĞı×ªµÄ´¦Àí·½Ê½£¬¼ì²é `moveDir` ÊÇ·ñÓĞĞ§£¬È»ºóÊ¹ÓÃÒÆ¶¯ËÙ¶È `moveSpeed` ºÍÊ±¼ä²½³¤ `dt` ¸üĞÂÓÎÏ·¶ÔÏóµÄÎ»ÖÃ¡£
-
-### ×Ü½á
-
-Õâ¶Î´úÂëÊµÏÖÁËÒ»¸ö¼òµ¥µÄ¼üÅÌ¿ØÖÆÏµÍ³£¬ÔÊĞíÓÃ»§Í¨¹ı·½Ïò¼ü¿ØÖÆÎïÌåÔÚ XZ Æ½ÃæÉÏµÄĞı×ªºÍÒÆ¶¯¡£Í¨¹ıÊ¹ÓÃÈı½Çº¯Êı¡¢ÏòÁ¿ÔËËãÒÔ¼°ÊÊµ±µÄ½Ç¶ÈÏŞÖÆ£¬È·±£ÁËÎïÌåÒÆ¶¯µÄ×ÔÈ»ºÍÓĞĞ§¡£Äã¿ÉÒÔ¸ù¾İĞèÒªÀ©Õ¹»òĞŞ¸ÄÕâ¸ö¿ØÖÆÆ÷£¬ÒÔÊÊÓ¦²»Í¬µÄÓÎÏ·ĞèÇó¡£
-
-*/

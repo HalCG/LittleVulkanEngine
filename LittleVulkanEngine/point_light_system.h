@@ -11,6 +11,11 @@
 #include <vector>
 
 namespace lve {
+	/**
+	 * 点光源系统。
+	 * update()：旋转灯光位置，写入 GlobalUbo.pointLights。
+	 * render()：无顶点缓冲的 Billboard（point_light shader + alpha blend），按距相机远近排序。
+	 */
 	class PointLightSystem {
 	public:
 		PointLightSystem(

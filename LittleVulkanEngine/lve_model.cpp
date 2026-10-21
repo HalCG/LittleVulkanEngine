@@ -48,44 +48,28 @@ namespace lve {
 #if 0
 		lveDevice.createBuffer(
 			bufferSize,
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //¶¥µã»º³åÇø
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//»º³åÇøÊÇ¿É±»Ö÷»ú·ÃÎÊºÍÒ»ÖÂĞÔµÄ£¨host-visible and coherent£©
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //é¡¶ç‚¹ç¼“å†²åŒº
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//ç¼“å†²åŒºæ˜¯å¯è¢«ä¸»æœºè®¿é—®å’Œä¸€è‡´æ€§çš„ï¼ˆhost-visible and coherentï¼‰
 			vertexBuffer,
 			vertexBufferMemory);
 
 		void* data;
-		vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);//Ó³ÉäÄÚ´æ£¬ÒÔ±ã¿ÉÒÔ½«¶¥µãÊı¾İ¸´ÖÆµ½»º³åÇøÖĞ¡£
+		vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);//æ˜ å°„å†…å­˜ï¼Œä»¥ä¾¿å¯ä»¥å°†é¡¶ç‚¹æ•°æ®å¤åˆ¶åˆ°ç¼“å†²åŒºä¸­ã€‚
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(lveDevice.device(), vertexBufferMemory);
 #endif
-		/*
-		### ÎªÊ²Ã´Òª½øĞĞÁ½´Î¿½±´£¿
-
-			1. **ĞÔÄÜ¿¼ÂÇ**£º
-			   - **staging buffer** ÓÃÓÚÔÚ CPU ºÍ GPU Ö®¼ä½øĞĞ¸ßĞ§µÄÊı¾İ´«Êä¡£Ê¹ÓÃ `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT` ºÍ `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT` Ê¹µÃ CPU ¿ÉÒÔÖ±½Ó·ÃÎÊºÍĞŞ¸ÄÕâ¸ö»º³åÇøµÄÄÚÈİ¡£Í¨¹ıÕâÖÖ·½Ê½£¬¶¥µãÊı¾İ¿ÉÒÔ·½±ãµØ´Ó CPU ×¼±¸ºÃ£¬È»ºóÖ±½ÓĞ´ÈëÕâ¸ö»º³åÇø¡£
-			   - ´´½¨µÄ¶¥µã»º³åÇø£¨`vertexBuffer`£©Ê¹ÓÃ `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT` ÒÔ±ãÔÚ GPU ±¾µØÄÚ´æÖĞ£¬Í¨³£¿ÉÒÔ»ñµÃ¸ü¸ßµÄäÖÈ¾ĞÔÄÜ¡£Òò´Ë£¬staging buffer ²»»áÖ±½ÓÓÃÓÚäÖÈ¾£¬¶øÊÇ×÷ÎªÒ»¸öÊı¾İ´«ÊäÍ¾¾¶¡£
-
-			2. **ÄÚ´æÀàĞÍ**£º
-			   - GPU ±¾µØÄÚ´æÍ¨³£½ÏÂıÇÒÄÑÒÔÖ±½Ó´Ó CPU ·ÃÎÊ£¬Òò´ËËüÒªÇóÍ¨¹ı staging buffer ÏÈ½«Êı¾İÍê³ÉÒ»´Î¿½±´¡£Ö±½Ó½«¶¥µãÊı¾İ¸´ÖÆµ½ GPU ±¾µØÄÚ´æ¿ÉÄÜ»áÓöµ½ÎŞ·¨·ÃÎÊ»òĞ§ÂÊµÍÏÂµÄÎÊÌâ¡£
-
-			3. **Êı¾İ´«ÊäÓÅ»¯**£º
-			   - ÀûÓÃÕâ¸öÁ÷³Ì£¬Äú¿ÉÒÔ¸üÁé»îµØÉè¼ÆÊı¾İ´«Êä£ºÈ·±£Êı¾İÔÚÄÚ´æÖĞµÄÅÅÁĞÊÇºÏÊÊµÄ£¬²¢ÔÊĞíÕë¶Ô²»Í¬ÓÃÍ¾£¨CPU ²Ù×÷ºÍ GPU äÖÈ¾£©½øĞĞºÏÊÊµÄÄÚ´æ·ÖÅä¡£
-		*/
-
-		//1. ´´½¨ÁÙÊ±»º³åÇø£¨Staging Buffer£©
+		// staging(HOST_VISIBLE) â†’ copy â†’ vertexBuffer(DEVICE_LOCAL)ï¼šGPU æœ¬åœ°é¡¶ç‚¹ç¼“å†²æ€§èƒ½æ›´å¥½
 		LVEBuffer stagingBuffer{
 			lveDevice,
 			vertexSize,
 			vertexCount,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,//ÔÊĞíÆäÓÃÓÚ´«Êä²Ù×÷
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//»º³åÇøÊÇ¿É±»Ö÷»ú·ÃÎÊºÍÒ»ÖÂĞÔµÄ£¨host-visible and coherent£©
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		};
 
-		//2. ¶¥µãÊı¾İ¸´ÖÆµ½ stagingBuffer
 		stagingBuffer.map();
 		stagingBuffer.writeToBuffer((void*)vertices.data());
 
-		//3. ´´½¨Ò»¸ö GPU ÓÅ»¯µÄ¶¥µã»º³åÇø vertexBuffer£¬ËüÊ¹ÓÃ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT£¬ÒÔÈ·±£ÆäÔÚ GPU ±¾µØÄÚ´æÖĞ£¬ÕâÑù¿ÉÒÔÌá¸ßäÖÈ¾ĞÔÄÜ
 		vertexBuffer = std::make_unique<LVEBuffer>(
 			lveDevice,
 			vertexSize,
@@ -94,7 +78,6 @@ namespace lve {
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 			);
 
-		//4. ´ÓÁÙÊ±»º³åÇø¸´ÖÆµ½¶¥µã»º³åÇø
 		lveDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
 	}
 
@@ -132,7 +115,7 @@ namespace lve {
 	}
 
 	void LVEModel::draw(VkCommandBuffer commandBuffer) {//layout error draw->bind
-		//¸Ã·½·¨ÔÚÖ¸¶¨µÄÃüÁî»º³åÇøÖĞ£¬CmdDraw À´»æÖÆÄ£ĞÍ
+		//è¯¥æ–¹æ³•åœ¨æŒ‡å®šçš„å‘½ä»¤ç¼“å†²åŒºä¸­ï¼ŒCmdDraw æ¥ç»˜åˆ¶æ¨¡å‹
 		if (hasIndexBuffer) {
 			vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
 		}
@@ -142,7 +125,7 @@ namespace lve {
 	}
 
 	void LVEModel::bind(VkCommandBuffer commandBuffer) {//layout error bind->draw
-		//°Ñ¶¥µã»º³åÇø°ó¶¨µ½ÃüÁî»º³åÇø£¬ÒÔ±ãºóĞøµÄ»æÖÆÃüÁî¿ÉÒÔ·ÃÎÊ¸Ã»º³åÇø¡£
+		//æŠŠé¡¶ç‚¹ç¼“å†²åŒºç»‘å®šåˆ°å‘½ä»¤ç¼“å†²åŒºï¼Œä»¥ä¾¿åç»­çš„ç»˜åˆ¶å‘½ä»¤å¯ä»¥è®¿é—®è¯¥ç¼“å†²åŒºã€‚
 		VkBuffer buffers[] = { vertexBuffer->getBuffer() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
@@ -152,25 +135,24 @@ namespace lve {
 		}
 	}
 	
-	//ÓÃÓÚÌá¹©»º³åÇøµÄ°ó¶¨ĞÅÏ¢
-	//»ñÈ¡¶¥µã°ó¶¨ÃèÊö: ·µ»ØÓë¶¥µãÊäÈë°ó¶¨Ïà¹ØµÄÃèÊö£¬°üÀ¨°ó¶¨Î»ÖÃ¡¢²½·ùºÍÊäÈëËÙÂÊÉèÖÃ¡£ÕâÀïµÄ²½·ù¶¨ÒåÁËÃ¿¸ö¶¥µãÊı¾İ½á¹¹µÄ´óĞ¡¡£
+	// Bindingï¼šä¸€æ•´æ¡é¡¶ç‚¹ç¼“å†²å¦‚ä½•æ­¥è¿›ã€‚å¯¹åº” shader é‡ŒåŒä¸€å¥— in å˜é‡å…±ç”¨ binding 0
 	std::vector<VkVertexInputBindingDescription> LVEModel::Vertex::getBindingDescriptions() {
 		std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
-		bindingDescriptions[0].binding = 0;
-		bindingDescriptions[0].stride = sizeof(Vertex);
-		bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;//TODO
+		bindingDescriptions[0].binding = 0;                          // ç»‘å®šæ§½å·
+		bindingDescriptions[0].stride = sizeof(Vertex);              // æ¯é¡¶ç‚¹å­—èŠ‚æ•°
+		bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;  // æ¯é¡¶ç‚¹é€’è¿›ï¼ˆéå®ä¾‹ï¼‰
 		return bindingDescriptions;
 	}
 
-	//Ìá¹©ÊôĞÔ£¨ÈçÎ»ÖÃºÍÑÕÉ«£©µÄ¾ßÌå¸ñÊ½ĞÅÏ¢
-	//»ñÈ¡¶¥µãÊôĞÔÃèÊö: ·µ»Ø¶¥µãÊäÈëÊôĞÔµÄÃèÊö¡£ÆäÖĞ°üÀ¨¶¥µãµÄÎ»ÖÃĞÅÏ¢ºÍÑÕÉ«ĞÅÏ¢µÄ¸ñÊ½£¬°ó¶¨Î»ÖÃ£¬Æ«ÒÆÁ¿µÈ
+	// Attributeï¼šæ¯ä¸ª in å˜é‡çš„ location / æ ¼å¼ / åœ¨ Vertex å†…åç§»
+	// å‚æ•°é¡ºåºï¼š{ location, binding, format, offset } â€”â€” å¿…é¡»ä¸ sample_shader.vert çš„ layout(location=) ä¸€è‡´
 	std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::getAttributeDescriptions() {
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+		// location0 â† positionï¼š3Ã—float
 		attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
 		attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });
 		attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal) });
-		attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv) });
-
+		attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv) });  // 2Ã—float
 		return attributeDescriptions;
 	}
 
@@ -223,193 +205,3 @@ namespace lve {
 		}
 	}
 }
-
-
-/*
-ÔÚ Vulkan ÖĞ£¬`vertexBuffer` ºÍ `vertexBufferMemory` ÊÇÁ½¸öÃÜÇĞÏà¹ØµÄ¸ÅÄî£¬·Ö±ğ´ú±í¶¥µã»º³åÇøºÍÆäËùÓ³ÉäµÄÄÚ´æ¡£ËüÃÇµÄ¹ØÏµºÍ×÷ÓÃÈçÏÂ£º
-
-### 1. `vertexBuffer`
-- **¶¨Òå**: `vertexBuffer` ÊÇÒ»¸ö Vulkan »º³åÇø¶ÔÏó£¨`VkBuffer`£©£¬ÓÃÓÚ´æ´¢¶¥µãÊı¾İµÄ¿é¡£
-- **¹¦ÄÜ**:
-  - ×÷Îª GPU ¿ÉÒÔ·ÃÎÊµÄÊı¾İ´æ´¢ÇøÓò£¬µ±ĞèÒªäÖÈ¾ÈıÎ¬Ä£ĞÍÊ±£¬GPU ´ÓÕâÀï¶ÁÈ¡¶¥µãĞÅÏ¢¡£
-  - ÔÚ»æÖÆÃüÁîÖĞ£¨ÀıÈç `vkCmdBindVertexBuffers`£©£¬½«´Ë»º³åÇø°ó¶¨µ½Í¼ĞÎ¹ÜÏß£¬Ê¹µÃºóĞøµÄ»æÖÆ²Ù×÷ÄÜ¹»Ê¹ÓÃÕâĞ©¶¥µãÊı¾İ¡£
-
-### 2. `vertexBufferMemory`
-- **¶¨Òå**: `vertexBufferMemory` ÊÇÒ»¸ö Vulkan ÄÚ´æ¶ÔÏó£¨`VkDeviceMemory`£©£¬Óë `vertexBuffer` ¹ØÁª£¬Ìá¹©Êµ¼ÊµÄÊı¾İ´æ´¢¿Õ¼ä¡£
-- **¹¦ÄÜ**:
-  - ´æ´¢¶¥µã»º³åÇø¶ÔÏó£¨`vertexBuffer`£©µÄÊı¾İ¡£Vulkan µÄÉè¼ÆÊ¹µÃ GPU ºÍ CPU µÄÄÚ´æ¹ÜÀí·Ö¿ª£¬Òò´ËĞèÒªÏÔÊ½µØ·ÖÅäÄÚ´æÒÔ¹© GPU Ê¹ÓÃ¡£
-  - ÔÚ´´½¨»º³åÇøºó£¬±ØĞë·ÖÅäÄÚ´æ²¢½«Æä°ó¶¨µ½»º³åÇø¶ÔÏó£¬ÕâÑù²ÅÄÜÔÚ»º³åÇøÖĞ´æ´¢Êı¾İ£¨Èç¶¥µãÎ»ÖÃ¡¢ÑÕÉ«µÈ£©¡£
-
-### ¹ØÏµ
-- **°ó¶¨¹ØÏµ**: ÔÚ Vulkan ÖĞ£¬»º³åÇø¶ÔÏó£¨Èç `vertexBuffer`£©ĞèÒªÒ»¸öÄÚ´æ¶ÔÏó£¨Èç `vertexBufferMemory`£©À´Êµ¼Ê´æ´¢Êı¾İ¡£´´½¨»º³åÇøºó£¬Í¨³£ĞèÒªÍ¨¹ı `vkBindBufferMemory` º¯Êı½« `vertexBufferMemory` °ó¶¨µ½ `vertexBuffer`£¬½¨Á¢ËüÃÇÖ®¼äµÄ¹ØÏµ¡£
-- **Êı¾İÁ÷Ïò**: Êı¾İµÄÁ÷¶¯Í¨³£ÊÇÕâÑùµÄ£º
-  1. ·ÖÅäÄÚ´æ (`vertexBufferMemory`)¡£
-  2. ´´½¨»º³åÇø¶ÔÏó (`vertexBuffer`)¡£
-  3. ½«ÄÚ´æ°ó¶¨µ½»º³åÇø¡£
-  4. ½«Êı¾İ£¨Èç¶¥µãÊı¾İ£©Ğ´Èëµ½°ó¶¨µÄÄÚ´æÖĞ¡£
-
-### Ê¾Àı
-ÔÚ `LVEModel::createVertexBuffers` º¯ÊıÖĞ£¬ÏÈ´´½¨»º³åÇø£¬È»ºóÓ³ÉäÄÚ´æÒÔ±ãÓÚÊı¾İµÄĞ´Èë£º
-
-```cpp
-// ´´½¨¶¥µã»º³å
-lveDevice.createBuffer(
-	bufferSize, // »º³åÇøµÄ´óĞ¡
-	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, // Ê¹ÓÃÀàĞÍ£º¶¥µã»º³åÇø
-	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, // ÄÚ´æÊôĞÔ
-	vertexBuffer, // Êä³öµÄ»º³åÇø
-	vertexBufferMemory // Êä³öµÄÄÚ´æ
-);
-
-// Ó³ÉäÄÚ´æ£¬×¼±¸Ğ´ÈëÊı¾İ
-void* data;
-vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);
-memcpy(data, vertices.data(), static_cast<size_t>(bufferSize)); // °Ñ¶¥µãÊı¾İ¸´ÖÆµ½ÄÚ´æÖĞ
-vkUnmapMemory(lveDevice.device(), vertexBufferMemory); // È¡ÏûÓ³ÉäÄÚ´æ
-```
-
-### ×Ü½á
-- `vertexBuffer` ÊÇÖ¸Ïò´æ´¢¶¥µãÊı¾İ»º³åÇøµÄ¾ä±ú£¬Ö±½ÓÓÃÓÚÍ¼ĞÎ¹ÜÏßµÄäÖÈ¾¡£
-- `vertexBufferMemory` ÊÇÓë¸Ã»º³åÇø¶ÔÏó¹ØÁªµÄÄÚ´æ£¬Êµ¼Ê´æ´¢¶¥µãÊı¾İ¡£Á½Õß½áºÏÊ¹ÓÃ£¬ÊµÏÖÁË Vulkan ÖĞÊı¾İµÄ¸ßĞ§¹ÜÀíºÍ·ÃÎÊ¡£
-
-*/
-
-/*
-`getBindingDescriptions` ºÍ `getAttributeDescriptions` ·½·¨¶¼ÓÃÓÚÃèÊö¶¥µãÊäÈëµÄ¸ñÊ½£¬µ«ËüÃÇ¸÷×Ô¹Ø×¢µÄ·½Ãæ²»Í¬¡£ÒÔÏÂÊÇÕâÁ½¸ö·½·¨µÄÇø±ğ£¬ÒÔ¼°ÎªÊ²Ã´ĞèÒªÔÚÓ³ÉäÄÚ´æºóµ÷ÓÃ `vkUnmapMemory` µÄ½âÊÍ¡£
-
-### 1. `getBindingDescriptions` ºÍ `getAttributeDescriptions` µÄÇø±ğ
-
-#### `getBindingDescriptions`
-- **¹¦ÄÜ**: ÃèÊö Vulkan ÖĞµÄ¶¥µãÊäÈë°ó¶¨£¨`VkVertexInputBindingDescription`£©¡£
-- **·µ»ØÄÚÈİ**:
-  - **binding**: °ó¶¨µÄÎ»ÖÃ£¬Ò»¸öºÃÓÑµÄ±êÊ¶·û£¨Í¨³£Îª 0£©¡£
-  - **stride**: Ã¿¸ö¶¥µãÊı¾İ½á¹¹µÄ×Ö½Ú´óĞ¡£¨ÀıÈç£¬½á¹¹Ìå `Vertex` µÄ´óĞ¡£©¡£¸ÃÖµÓÃÓÚ±íÊ¾´ÓÒ»¸ö¶¥µãµ½ÏÂÒ»¸ö¶¥µãÖ®¼äµÄ×Ö½ÚÊı¡£
-  - **inputRate**: ÊäÈëËÙÂÊ£¬ËüÖ¸Ê¾Êı¾İÊÇÃ¿¸ö¶¥µã´«µİÒ»´Î£¨`VK_VERTEX_INPUT_RATE_VERTEX`£©£¬»¹ÊÇÒ»´Î´«µİÕû¸ö¶¥µã»º³åÇø£¨`VK_VERTEX_INPUT_RATE_INSTANCE`£©£¬Í¨³£ÓÃÓÚÊµÀı»¯äÖÈ¾¡£
-
-##### Ê¾Àı
-```cpp
-std::vector<VkVertexInputBindingDescription> LVEModel::Vertex::getBindingDescriptions() {
-	std::vector<VkVertexInputBindingDescription> bindingDescriptions(1);
-	bindingDescriptions[0].binding = 0; // °ó¶¨Î»ÖÃ
-	bindingDescriptions[0].stride = sizeof(Vertex); // ²½·ù
-	bindingDescriptions[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // ÊäÈëËÙÂÊ
-	return bindingDescriptions;
-}
-```
-
-#### `getAttributeDescriptions`
-- **¹¦ÄÜ**: ÃèÊöÃ¿¸ö¶¥µãµÄÊôĞÔ£¨`VkVertexInputAttributeDescription`£©£¬ÓÃÓÚÖ¸¶¨»º³åÇøÖĞÃ¿¸öÊôĞÔµÄ¸ñÊ½¡£
-- **·µ»ØÄÚÈİ**:
-  - **binding**: ¹ØÁªµÄ¶¥µãÊäÈë°ó¶¨µÄÎ»ÖÃ£¨Í¨³£Óë°ó¶¨ÃèÊöÏà¶ÔÓ¦£©¡£
-  - **location**: ÔÚ×ÅÉ«Æ÷ÖĞ¶ÔÓ¦µÄÊäÈëÎ»ÖÃ£¬Õâ¸öÎ»ÖÃÓÃÓÚÔÚ×ÅÉ«Æ÷ÄÚÒıÓÃ¶¥µãÊôĞÔ¡£
-  - **format**: Êı¾İ¸ñÊ½£¬Èç`VK_FORMAT_R32G32_SFLOAT`£¨´ú±íÒ»¸ö°üº¬ X ºÍ Y ×ø±êµÄ¶şÎ¬µã£©£¬»ò `VK_FORMAT_R32G32B32_SFLOAT`£¨´ú±í°üº¬ RGB ÑÕÉ«µÄÈıÎ¬ÑÕÉ«£©¡£
-  - **offset**: ÊôĞÔÔÚ¶¥µã½á¹¹ÌåÖĞµÄÆ«ÒÆÁ¿£¬Ö¸Ê¾µ±Ç°ÊôĞÔÔÚ»º³åÇøÖĞÏà¶ÔÓÚ¶¥µãÊı¾İ¿ªÍ·µÄÆ«ÒÆÁ¿¡£
-
-##### Ê¾Àı
-```cpp
-std::vector<VkVertexInputAttributeDescription> LVEModel::Vertex::getAttributeDescriptions() {
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
-	attributeDescriptions[0].binding = 0; // °ó¶¨Î»ÖÃ
-	attributeDescriptions[0].location = 0; // ×ÅÉ«Æ÷ÊäÈëÎ»ÖÃ
-	attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT; // Êı¾İ¸ñÊ½
-	attributeDescriptions[0].offset = offsetof(Vertex, position); // Æ«ÒÆ
-
-	attributeDescriptions[1].binding = 0; // °ó¶¨Î»ÖÃ
-	attributeDescriptions[1].location = 1; // ×ÅÉ«Æ÷ÊäÈëÎ»ÖÃ
-	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT; // Êı¾İ¸ñÊ½
-	attributeDescriptions[1].offset = offsetof(Vertex, color); // Æ«ÒÆ
-
-	return attributeDescriptions;
-}
-```
-
-### 2. Ó³ÉäÄÚ´æºÍµ÷ÓÃ `vkUnmapMemory` µÄÔ­Òò
-
-ÔÚ Vulkan ÖĞ£¬´ÓÖ÷»ú£¨CPU£©ÏòÉè±¸£¨GPU£©´«ÊäÊı¾İÊ±£¬Í¨³£ÒªÓ³ÉäÄÚ´æÒÔ±ãÓÚ·ÃÎÊ¡£ÒÔÏÂÊÇÓ³ÉäÄÚ´æºóµ÷ÓÃ `vkUnmapMemory` µÄÔ­Òò£º
-
-- **Ó³ÉäÄÚ´æ (`vkMapMemory`)**: ÕâÒ»²½ÖèÔÊĞí CPU ·ÃÎÊ GPU ÄÚ´æ²¢²Ù×÷Êı¾İ¡£Í¨¹ıÓ³Éä£¬ÎÒÃÇ¿ÉÒÔ»ñµÃÊµ¼Ê´æ´¢Êı¾İµÄµØÖ·Ö¸Õë£¨Èç `void* data`£©£¬È»ºó¾Í¿ÉÒÔÖ±½ÓÊ¹ÓÃÕâ¸öÖ¸ÕëÀ´¶ÁÈ¡»òĞ´ÈëÊı¾İ¡£ÀıÈç£¬ÔÚ¶¥µã»º³åÇøÖĞ£¬ÎÒÃÇ½«¶¥µãÊı¾İ´Ó CPU ¸´ÖÆµ½ GPU µÄÄÚ´æ¿Õ¼ä¡£
-
-- **È¡ÏûÓ³ÉäÄÚ´æ (`vkUnmapMemory`)**:
-  - ÔÚÍê³ÉÊı¾İĞ´ÈëºóĞèÒªµ÷ÓÃ `vkUnmapMemory`£¬ÕâÊÇÎªÁËÍ¨Öª Vulkan ÄÚ´æ·ÃÎÊ½áÊø£¬È·±£Êı¾İÒ»ÖÂĞÔ²¢ÊÍ·Å¶Ô¸ÃÄÚ´æµÄ·ÃÎÊ¡£
-  - Vulkan ÊÇÒ»ÖÖÏÔÊ½µÄÍ¼ĞÎ API£¬Ê¹ÓÃÕßĞèÒªÃ÷È·¹ÜÀíÄÚ´æµÄÓ³Éä×´Ì¬¡£Î´ÄÜÈ¡ÏûÓ³Éä¿ÉÄÜµ¼ÖÂÂß¼­´íÎó¡¢ÄÚ´æĞ¹Â©»ò×ÊÔ´³åÍ»µÈÎÊÌâ£¬ÒòÎª GPU ¿ÉÄÜÎŞ·¨ÕıÈ·µØ·ÃÎÊ¸üĞÂºóµÄÊı¾İ¡£
-
-### Ğ¡½á
-- `getBindingDescriptions` ÓÃÓÚÌá¹©»º³åÇøµÄ°ó¶¨ĞÅÏ¢£¬¶ø `getAttributeDescriptions` Ìá¹©ÊôĞÔ£¨ÈçÎ»ÖÃºÍÑÕÉ«£©µÄ¾ßÌå¸ñÊ½ĞÅÏ¢¡£
-- Ó³ÉäÄÚ´æºóµ÷ÓÃ `vkUnmapMemory` ÊÇ±ØÒªµÄ£¬ÒÔÈ·±£Êı¾İÕıÈ·Ğ´Èë£¬²¢¸æÖª Vulkan ÄÚ´æµÄ·ÃÎÊ½áÊø£¬´Ó¶ø±£»¤ÄÚ´æµÄÓĞĞ§ĞÔºÍÒ»ÖÂĞÔ¡£
-
-*/
-
-
-/*
-ÔÚÄúÌá¹©µÄ´úÂëÖĞ£¬ÓĞÁ½ÖÖ·½°¸ÓÃÓÚ´´½¨ºÍÌî³ä Vulkan µÄ¶¥µã»º³åÇø£¬ÒÔÏÂÊÇÁ½ÕßµÄÏêÏ¸±È½Ï£º
-
-### ±»×¢ÊÍµôµÄ·½°¸£º
-
-```cpp
-#if 0
-	lveDevice.createBuffer(
-		bufferSize,
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, //¶¥µã»º³åÇø
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//»º³åÇøÊÇ¿É±»Ö÷»ú·ÃÎÊºÍÒ»ÖÂĞÔµÄ£¨host-visible and coherent£©
-		vertexBuffer,
-		vertexBufferMemory);
-
-	void* data;
-	vkMapMemory(lveDevice.device(), vertexBufferMemory, 0, bufferSize, 0, &data);//Ó³ÉäÄÚ´æ£¬ÒÔ±ã¿ÉÒÔ½«¶¥µãÊı¾İ¸´ÖÆµ½»º³åÇøÖĞ¡£
-	memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-	vkUnmapMemory(lveDevice.device(), vertexBufferMemory);
-#endif
-```
-
-#### ËµÃ÷£º
-1. **´´½¨¶¥µã»º³åÇø**£ºÕâÖÖ·½·¨Ö±½ÓÊ¹ÓÃ `VK_BUFFER_USAGE_VERTEX_BUFFER_BIT` ´´½¨Ò»¸ö¶¥µã»º³åÇø£¬ÒâÎ¶×ÅÕâ¸ö»º³åÇø½«±»ÓÃ×÷¶¥µãÊı¾İµÄ´æ´¢¡£
-2. **ÄÚ´æÊôĞÔ**£ºÊ¹ÓÃ `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`£¬Õâ±íÃ÷´Ë»º³åÇø¿ÉÒÔ±»Ö÷»ú·ÃÎÊ£¬ÇÒÊÇÒ»ÖÂµÄ£¬ÕâÑù¿ÉÒÔ·½±ãµØÔÚ CPU ¶ËÖ±½ÓĞ´ÈëÊı¾İ¡£
-3. **Ö±½Ó¸´ÖÆÊı¾İ**£ºÍ¨¹ıÓ³ÉäÄÚ´æ (`vkMapMemory`) £¬¿ÉÒÔÖ±½Ó½«ÄÚÈİ´Ó `vertices` Êı×é¸´ÖÆµ½ `vertexBuffer` ÖĞ¡£
-
-#### È±µã£º
-- ÓÉÓÚÊ¹ÓÃ `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT`£¬´´½¨µÄ»º³åÇø¿ÉÄÜĞÔÄÜ²»¸ß¡£Èç¹ûÖ±½ÓÔÚ´Ë»º³åÇøÄÚ´æÉÏÖ´ĞĞ GPU ²Ù×÷£¬³É±¾½Ï¸ß£¬ÒòÎªÊı¾İ±ØĞë¾­¹ı CPU ºÍ GPU Ö®¼äµÄ´«Êä¡£
-
-### Ã»ÓĞ×¢ÊÍµÄ·½°¸£º
-
-```cpp
-VkBuffer stagingBuffer;
-VkDeviceMemory stagingBufferMemory;
-
-lveDevice.createBuffer(
-	bufferSize,
-	VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //¶¥µã»º³åÇø
-	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,//»º³åÇøÊÇ¿É±»Ö÷»ú·ÃÎÊºÍÒ»ÖÂĞÔµÄ£¨host-visible and coherent£©
-	stagingBuffer,
-	stagingBufferMemory);
-
-void* data;
-vkMapMemory(lveDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-vkUnmapMemory(lveDevice.device(), stagingBufferMemory);
-lveDevice.createBuffer(
-	bufferSize,
-	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-	vertexBuffer,
-	vertexBufferMemory);
-
-lveDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-vkDestroyBuffer(lveDevice.device(), stagingBuffer, nullptr);
-vkFreeMemory(lveDevice.device(), stagingBufferMemory, nullptr);
-```
-
-#### ËµÃ÷£º
-1. **´´½¨ÁÙÊ±»º³åÇø£¨Staging Buffer£©**£ºÊ×ÏÈ´´½¨Ò»¸öÓÃÓÚÊı¾İ´«ÊäµÄÁÙÊ±»º³åÇø `stagingBuffer`£¬²¢Ê¹ÓÃ `VK_BUFFER_USAGE_TRANSFER_SRC_BIT` ×÷ÎªÆäÓÃÍ¾£¬ÔÊĞíÆäÓÃÓÚ´«Êä²Ù×÷¡£
-2. **¸´ÖÆÊı¾İµ½ÁÙÊ±»º³åÇø**£ºÊ×ÏÈ½«¶¥µãÊı¾İ¸´ÖÆµ½ `stagingBuffer`£¬È»ºó´´½¨Ò»¸ö GPU ÓÅ»¯µÄ¶¥µã»º³åÇø `vertexBuffer`£¬ËüÊ¹ÓÃ `VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT`£¬ÒÔÈ·±£ÆäÔÚ GPU ±¾µØÄÚ´æÖĞ£¬ÕâÑù¿ÉÒÔÌá¸ßäÖÈ¾ĞÔÄÜ¡£
-3. **´ÓÁÙÊ±»º³åÇø¸´ÖÆµ½¶¥µã»º³åÇø**£ºÊ¹ÓÃ `lveDevice.copyBuffer` ½«Êı¾İ´Ó `stagingBuffer` ¸´ÖÆµ½ `vertexBuffer`¡£ÕâÒ»²½ÖèÍ¨³£ÔÚ GPU Ö®¼ä½øĞĞ£¬Ğ§ÂÊ¸ü¸ß¡£
-4. **ÇåÀíÁÙÊ±»º³åÇø**£º×îºó£¬Ïú»Ù `stagingBuffer` ºÍÊÍ·ÅÆäÄÚ´æ£¬È·±£Ã»ÓĞÄÚ´æĞ¹Â©¡£
-
-#### ÓÅµã£º
-- **ĞÔÄÜÓÅ»¯**£ºÍ¨¹ıÊ¹ÓÃ staging buffer£¬¿ÉÒÔÈ·±£¶¥µãÊı¾İÔÚ GPU ÄÚ´æÖĞ£¨`vertexBuffer`£©£¬´Ó¶øÌá¸ßºóĞøäÖÈ¾µÄĞ§ÂÊ¡£
-- **±£³Ö CPU ºÍ GPU ²Ù×÷µÄ·ÖÀë**£ºÊ¹ÓÃ staging buffer ¿ÉÒÔÓĞĞ§µØÔÚ CPU Êı¾İ×¼±¸ºÍ GPU äÖÈ¾²Ù×÷Ö®¼ä·ÖÀë£¬´Ó¶øÌáÉıÕûÌåĞÔÄÜ¡£
-
-### ×Ü½á£º
-
-±»×¢ÊÍµôµÄ·½°¸ÊÊºÏ¿ìËÙ²âÊÔºÍ¼ò»¯µÄ³¡¾°£¬µ«ÔÚĞÔÄÜÓÅ»¯ÉÏ²»ÈçÃ»ÓĞ×¢ÊÍµÄ·½°¸ºÃ¡£ºóÕßÀûÓÃÁÙÊ±»º³åÇø¼¼Êõ¾«È·¿ØÖÆÊı¾İ´«Êä¹ı³Ì£¬²¢½« CPU ºÍ GPU µÄ²Ù×÷Ğ§ÂÊ×î´ó»¯£¬¸üÊÊºÏÓÚÊµ¼Ê¿ª·¢ÖĞµÄÊ¹ÓÃÇé¿ö¡£
-
-*/

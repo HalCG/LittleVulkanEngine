@@ -8,9 +8,9 @@
 
 namespace lve {
 	/*
-		LVEPipeline Àà¸ºÔğ Vulkan Í¼ĞÎ¹ÜÏßµÄ´´½¨ºÍ¹ÜÀí£¬
-		º­¸Ç´Ó¶ÁÈ¡×ÅÉ«Æ÷´úÂëµ½´´½¨Í¼ĞÎ¹ÜÏßµÄÖ÷Òª²½Öè£¬
-		Í¬Ê±Ìá¹©ÁË¿ÉÅäÖÃºÍÄ¬ÈÏµÄ¹ÜÏßÉèÖÃ¡£
+		LVEPipeline ç±»è´Ÿè´£ Vulkan å›¾å½¢ç®¡çº¿çš„åˆ›å»ºå’Œç®¡ç†ï¼Œ
+		æ¶µç›–ä»è¯»å–ç€è‰²å™¨ä»£ç åˆ°åˆ›å»ºå›¾å½¢ç®¡çº¿çš„ä¸»è¦æ­¥éª¤ï¼Œ
+		åŒæ—¶æä¾›äº†å¯é…ç½®å’Œé»˜è®¤çš„ç®¡çº¿è®¾ç½®ã€‚
 	*/
 	LVEPipeline::LVEPipeline(
 		LVEDevice& device,
@@ -21,14 +21,14 @@ namespace lve {
 	}
 
 	LVEPipeline::~LVEPipeline() {
-		//Ïú»Ù×ÅÉ«Æ÷Ä£¿éºÍÍ¼ĞÎ¹ÜÏß£¬È·±£Ã»ÓĞÄÚ´æĞ¹Â©¡£
+		//é”€æ¯ç€è‰²å™¨æ¨¡å—å’Œå›¾å½¢ç®¡çº¿ï¼Œç¡®ä¿æ²¡æœ‰å†…å­˜æ³„æ¼ã€‚
 		vkDestroyShaderModule(lveDevice.device(), vertShaderModule, nullptr);
 		vkDestroyShaderModule(lveDevice.device(), fragShaderModule, nullptr);
 		vkDestroyPipeline(lveDevice.device(), graphicsPipeline, nullptr);
 	}
 
 	std::vector<char> LVEPipeline::readFile(const std::string& filePath) {
-		std::ifstream file(filePath, std::ios::ate | std::ios::binary);//ate ÎÄ¼ş´ò¿ªÊ±Á¢¼´¶¨Î»µ½Ä©Î²£¬ÒÔ±ã¶¨Î»µ½ÎÄ¼ş´óĞ¡
+		std::ifstream file(filePath, std::ios::ate | std::ios::binary);//ate æ–‡ä»¶æ‰“å¼€æ—¶ç«‹å³å®šä½åˆ°æœ«å°¾ï¼Œä»¥ä¾¿å®šä½åˆ°æ–‡ä»¶å¤§å°
 
 		if (!file.is_open()) {
 			throw std::runtime_error("failed to open file: " + filePath);
@@ -77,7 +77,7 @@ namespace lve {
 		auto& bindingDescriptions = configInfo.bindingDescriptions;
 		auto& attributeDescriptions = configInfo.attributeDescriptions;
 
-		//ÅäÖÃ¶¥µãÊäÈë×´Ì¬,±£´æ¶¥µãÊôĞÔºÍ°ó¶¨ÃèÊöµÄÊıÁ¿¡£
+		//é…ç½®é¡¶ç‚¹è¾“å…¥çŠ¶æ€,ä¿å­˜é¡¶ç‚¹å±æ€§å’Œç»‘å®šæè¿°çš„æ•°é‡ã€‚
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -85,7 +85,7 @@ namespace lve {
 		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
-		////´ÓconfigInfo ÀïÃæÒÆ³öÀ´
+		////ä»configInfo é‡Œé¢ç§»å‡ºæ¥
 		//VkPipelineViewportStateCreateInfo viewportInfo{};
 		//viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		//viewportInfo.viewportCount = 1;
@@ -93,9 +93,9 @@ namespace lve {
 		//viewportInfo.scissorCount = 1;
 		//viewportInfo.pScissors = &configInfo.scissor;
 
-		//ÅäÖÃÍ¼ĞÎ¹ÜÏßµÄ¸÷ÖÖ×´Ì¬¡£
-		//pipelineInfo °üº¬Í¼ĞÎ¹ÜÏßµÄËùÓĞ´´½¨ĞÅÏ¢£¬ÀıÈç×ÅÉ«Æ÷½×¶Î¡¢¶¥µãÊäÈë×´Ì¬¡¢»æÖÆ·½Ê½£¨ÊäÈë×°Åä£©¡¢ÊÓ¿Ú×´Ì¬¡¢¹âÕ¤»¯×´Ì¬¡¢¶àÖØ²ÉÑù×´Ì¬¡¢ÑÕÉ«»ìºÏ×´Ì¬¡¢Éî¶ÈÄ£°å×´Ì¬ºÍ¶¯Ì¬×´Ì¬µÈ¡£
-		//Ê¹ÓÃ configInfo ÖĞ´«ÈëµÄ¸÷ÖÖĞÅÏ¢À´Ìî³äÍ¼ĞÎ¹ÜÏßµÄĞÅÏ¢½á¹¹¡£
+		//é…ç½®å›¾å½¢ç®¡çº¿çš„å„ç§çŠ¶æ€ã€‚
+		//pipelineInfo åŒ…å«å›¾å½¢ç®¡çº¿çš„æ‰€æœ‰åˆ›å»ºä¿¡æ¯ï¼Œä¾‹å¦‚ç€è‰²å™¨é˜¶æ®µã€é¡¶ç‚¹è¾“å…¥çŠ¶æ€ã€ç»˜åˆ¶æ–¹å¼ï¼ˆè¾“å…¥è£…é…ï¼‰ã€è§†å£çŠ¶æ€ã€å…‰æ …åŒ–çŠ¶æ€ã€å¤šé‡é‡‡æ ·çŠ¶æ€ã€é¢œè‰²æ··åˆçŠ¶æ€ã€æ·±åº¦æ¨¡æ¿çŠ¶æ€å’ŒåŠ¨æ€çŠ¶æ€ç­‰ã€‚
+		//ä½¿ç”¨ configInfo ä¸­ä¼ å…¥çš„å„ç§ä¿¡æ¯æ¥å¡«å……å›¾å½¢ç®¡çº¿çš„ä¿¡æ¯ç»“æ„ã€‚
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipelineInfo.stageCount = 2;
@@ -140,179 +140,102 @@ namespace lve {
 		}
 	}
 
-	//ÔÚ¸ø¶¨µÄÃüÁî»º³åÇøÖĞ°ó¶¨Í¼ĞÎ¹ÜÏß¡£
+	//åœ¨ç»™å®šçš„å‘½ä»¤ç¼“å†²åŒºä¸­ç»‘å®šå›¾å½¢ç®¡çº¿ã€‚
 	void LVEPipeline::bind(VkCommandBuffer commandBuffer) {
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	}
 
-	//Ä¬ÈÏ¹ÜÏßÅäÖÃ
-	//¶¨ÒåÊäÈë×°Åä¡¢ÊÓ¿Ú¡¢¹âÕ¤»¯¡¢¶àÖØ²ÉÑù¡¢ÑÕÉ«»ìºÏ¡¢Éî¶ÈÄ£°åºÍ¶¯Ì¬×´Ì¬µÄÅäÖÃ¡£
-	//ÓÉÓÚÕâĞ©ÅäÖÃÊÇ Vulkan ¹ÜÏßµÄ»ù±¾×é³É²¿·Ö£¬Òò´ËÌá¹©Ä¬ÈÏÖµ¿ÉÒÔ¼ò»¯¹ÜÏß´´½¨µÄ¹ı³Ì¡£
+	// é»˜è®¤å›ºå®šåŠŸèƒ½çŠ¶æ€ï¼ˆç”Ÿç–æ—¶é€å­—æ®µå¯¹ç…§ docs/CODE_GUIDE.md Â§5.8ï¼‰
 	void LVEPipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
-		// ÊäÈë×°Åä×´Ì¬
+		// --- è¾“å…¥è£…é…ï¼šé¡¶ç‚¹å¦‚ä½•æ‹¼æˆå›¾å…ƒ ---
 		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
+		configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;  // æ¯ 3 é¡¶ç‚¹ä¸€ä¸‰è§’
+		configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;  // ä¸ç”¨ strip é‡å¯ç´¢å¼•
 
-		// ÊÓ¿Ú×´Ì¬
+		// --- è§†å£ï¼šä¸ªæ•°å£°æ˜ï¼›å®é™…çŸ©å½¢å› åŠ¨æ€çŠ¶æ€æ¯å¸§ vkCmdSet* ---
 		configInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		configInfo.viewportInfo.viewportCount = 1;
 		configInfo.viewportInfo.pViewports = nullptr;
 		configInfo.viewportInfo.scissorCount = 1;
 		configInfo.viewportInfo.pScissors = nullptr;
 
-		// ¹âÕ¤»¯×´Ì¬ 
+		// --- å…‰æ …åŒ–ï¼šä¸‰è§’å½¢ â†’ ç‰‡å…ƒ ---
 		configInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
-		configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
-		configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
+		configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;       // ä¸æŠŠè¶…è¿‘/è¶…è¿œæ·±åº¦å¤¹åˆ° [0,1]
+		configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE; // FALSE=è¦çœŸæ­£å…‰æ …åŒ–
+		configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL; // FILL/çº¿æ¡†/ç‚¹
 		configInfo.rasterizationInfo.lineWidth = 1.0f;
-		configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
-		configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
-		configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
-		configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
-		configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
+		configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;       // ä¸å‰”èƒŒé¢ï¼ˆæ•™å­¦çœäº‹ï¼‰
+		configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;// é¡ºæ—¶é’ˆä¸ºæ­£é¢
+		configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;         // é˜´å½± acne ç­‰æ‰å¼€
+		configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;
+		configInfo.rasterizationInfo.depthBiasClamp = 0.0f;
+		configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;
 
-		// ¶àÖØ²ÉÑù×´Ì¬ 
+		// --- å¤šé‡é‡‡æ ·ï¼šæœ¬å·¥ç¨‹å…³é—­ MSAA ---
 		configInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
 		configInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		configInfo.multisampleInfo.minSampleShading = 1.0f;           // Optional
-		configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
-		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
-		configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
+		configInfo.multisampleInfo.minSampleShading = 1.0f;
+		configInfo.multisampleInfo.pSampleMask = nullptr;
+		configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;
+		configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;
 
-		// ÑÕÉ«»ìºÏ×´Ì¬
+		// --- é¢œè‰²æ··åˆï¼šé»˜è®¤å…³é—­ = æ–°ç‰‡å…ƒç›´æ¥è¦†ç›– ---
 		configInfo.colorBlendAttachment.colorWriteMask =
 			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
-			VK_COLOR_COMPONENT_A_BIT;
+			VK_COLOR_COMPONENT_A_BIT;  // RGBA éƒ½å¯å†™
 		configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;              // Optional
-		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;   // Optional
-		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
-		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
+		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 		configInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-		configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
+		configInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;
 		configInfo.colorBlendInfo.attachmentCount = 1;
 		configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
-		configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
-		configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+		configInfo.colorBlendInfo.blendConstants[0] = 0.0f;
+		configInfo.colorBlendInfo.blendConstants[1] = 0.0f;
+		configInfo.colorBlendInfo.blendConstants[2] = 0.0f;
+		configInfo.colorBlendInfo.blendConstants[3] = 0.0f;
 
-		// Éî¶ÈÄ£°å×´Ì¬ 
+		// --- æ·±åº¦ï¼šè¿‘å°è¿œå¤§ï¼ŒLESS ç•™ä¸‹æ›´è¿‘çš„ç‰‡å…ƒ ---
 		configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
 		configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
 		configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 		configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-		configInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
-		configInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
+		configInfo.depthStencilInfo.minDepthBounds = 0.0f;
+		configInfo.depthStencilInfo.maxDepthBounds = 1.0f;
 		configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
-		configInfo.depthStencilInfo.front = {};  // Optional
-		configInfo.depthStencilInfo.back = {};   // Optional
+		configInfo.depthStencilInfo.front = {};
+		configInfo.depthStencilInfo.back = {};
 
-		// ¶¯Ì¬×´Ì¬
+		// --- åŠ¨æ€çŠ¶æ€ï¼šviewport/scissor ä¸è¿›ç®¡çº¿å¿«ç…§ï¼Œresize ä¸å¿…é‡å»ºç®¡çº¿ ---
 		configInfo.dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 		configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
 		configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
 		configInfo.dynamicStateInfo.flags = 0;
 
+		// é»˜è®¤æŒ‚ä¸Šç½‘æ ¼é¡¶ç‚¹å¸ƒå±€ï¼ˆç‚¹å…‰ç³»ç»Ÿä¼šæ¸…ç©ºè¿™ä¸¤é¡¹ï¼‰
 		configInfo.bindingDescriptions = LVEModel::Vertex::getBindingDescriptions();
 		configInfo.attributeDescriptions = LVEModel::Vertex::getAttributeDescriptions();
 	}
 
 	void LVEPipeline::enableAlphaBlending(PipelineConfigInfo& configInfo) {
 		configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
-		configInfo.colorBlendAttachment.colorWriteMask =											//Ö¸¶¨ÁËÄÄĞ©ÑÕÉ«·ÖÁ¿¿ÉÒÔ±»Ğ´Èëµ½Ö¡»º³åÖĞ¡£
+		configInfo.colorBlendAttachment.colorWriteMask =											//æŒ‡å®šäº†å“ªäº›é¢œè‰²åˆ†é‡å¯ä»¥è¢«å†™å…¥åˆ°å¸§ç¼“å†²ä¸­ã€‚
 			VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
 			VK_COLOR_COMPONENT_A_BIT;
-		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;			//ÉèÖÃÔ´ÑÕÉ«µÄ»ìºÏÒò×Ó
-		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;	//ÉèÖÃÄ¿±êÑÕÉ«µÄ»ìºÏÒò×Ó
-		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;								//Ô´ÑÕÉ«ºÍÄ¿±êÑÕÉ«Ö±½ÓÏà¼Ó
-		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;					//Ô´ Alpha »ìºÏÒò×ÓÉèÖÃÎª VK_BLEND_FACTOR_ONE£¬ÒâÎ¶×ÅÔ´ Alpha ÖµÍêÈ«²ÎÓë»ìºÏ¡£
-		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;					//Ä¿±ê Alpha »ìºÏÒò×ÓÉèÎª VK_BLEND_FACTOR_ZERO£¬±íÊ¾Ä¿±ê Alpha Öµ²»Ó°Ïì»ìºÏ½á¹û¡£
-		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;								//ÉèÖÃ Alpha »ìºÏ²Ù×÷Îª VK_BLEND_OP_ADD£¬Í¬ÑùÊÇ¼Ó·¨²Ù×÷
+		configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;			//è®¾ç½®æºé¢œè‰²çš„æ··åˆå› å­
+		configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;	//è®¾ç½®ç›®æ ‡é¢œè‰²çš„æ··åˆå› å­
+		configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;								//æºé¢œè‰²å’Œç›®æ ‡é¢œè‰²ç›´æ¥ç›¸åŠ 
+		configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;					//æº Alpha æ··åˆå› å­è®¾ç½®ä¸º VK_BLEND_FACTOR_ONEï¼Œæ„å‘³ç€æº Alpha å€¼å®Œå…¨å‚ä¸æ··åˆã€‚
+		configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;					//ç›®æ ‡ Alpha æ··åˆå› å­è®¾ä¸º VK_BLEND_FACTOR_ZEROï¼Œè¡¨ç¤ºç›®æ ‡ Alpha å€¼ä¸å½±å“æ··åˆç»“æœã€‚
+		configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;								//è®¾ç½® Alpha æ··åˆæ“ä½œä¸º VK_BLEND_OP_ADDï¼ŒåŒæ ·æ˜¯åŠ æ³•æ“ä½œ
 	}
-}
-
-//»æÖÆÈı½ÇĞÎÊ±µÄ´íÎóĞÅÏ¢£º
-/*
-validation layer: Validation Error: [ UNASSIGNED-GeneralParameterError-UnrecognizedBool32 ] | MessageID = 0xa320b052 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].blendEnable (3435973836) is neither VK_TRUE nor VK_FALSE. Applications MUST not pass any other values than VK_TRUE or VK_FALSE into a Vulkan implementation where a VkBool32 is expected.
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-srcColorBlendFactor-parameter ] | MessageID = 0xeb9e690 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].srcColorBlendFactor (3435973836) does not fall within the begin..end range of the VkBlendFactor enumeration tokens and is not an extension added token. The Vulkan spec states: srcColorBlendFactor must be a valid VkBlendFactor value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-srcColorBlendFactor-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-dstColorBlendFactor-parameter ] | MessageID = 0x8db942fe | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].dstColorBlendFactor (3435973836) does not fall within the begin..end range of the VkBlendFactor enumeration tokens and is not an extension added token. The Vulkan spec states: dstColorBlendFactor must be a valid VkBlendFactor value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-dstColorBlendFactor-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-colorBlendOp-parameter ] | MessageID = 0x7978ef4f | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].colorBlendOp (3435973836) does not fall within the begin..end range of the VkBlendOp enumeration tokens and is not an extension added token. The Vulkan spec states: colorBlendOp must be a valid VkBlendOp value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-colorBlendOp-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-srcAlphaBlendFactor-parameter ] | MessageID = 0x4a7f8ed8 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].srcAlphaBlendFactor (3358545944) does not fall within the begin..end range of the VkBlendFactor enumeration tokens and is not an extension added token. The Vulkan spec states: srcAlphaBlendFactor must be a valid VkBlendFactor value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-srcAlphaBlendFactor-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-dstAlphaBlendFactor-parameter ] | MessageID = 0x53ab1c8f | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].dstAlphaBlendFactor (496) does not fall within the begin..end range of the VkBlendFactor enumeration tokens and is not an extension added token. The Vulkan spec states: dstAlphaBlendFactor must be a valid VkBlendFactor value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-dstAlphaBlendFactor-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-alphaBlendOp-parameter ] | MessageID = 0x48f9f9b | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].alphaBlendOp (4127412873) does not fall within the begin..end range of the VkBlendOp enumeration tokens and is not an extension added token. The Vulkan spec states: alphaBlendOp must be a valid VkBlendOp value (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-alphaBlendOp-parameter)
-validation layer: Validation Error: [ VUID-VkPipelineColorBlendAttachmentState-colorWriteMask-parameter ] | MessageID = 0xb8f9c032 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].colorWriteMask contains flag bits (0x36b2) which are not recognized members of VkColorComponentFlagBits. The Vulkan spec states: colorWriteMask must be a valid combination of VkColorComponentFlagBits values (https://vulkan.lunarg.com/doc/view/1.3.290.0/windows/1.3-extensions/vkspec.html#VUID-VkPipelineColorBlendAttachmentState-colorWriteMask-parameter)
-failed to submit draw command buffer!
-*/
-/*
-ºÃµÄ£¬ÎÒÃÇÀ´·ÖÎöÄãÌá¹©µÄ Vulkan ´íÎóÈÕÖ¾¡£Õâ¸öÈÕÖ¾°üº¬ÁË¶à¸öÑéÖ¤´íÎó£¬Ö÷ÒªÊÇÔÚµ÷ÓÃ `vkCreateGraphicsPipelines()` Ê±£¬ÓëÑÕÉ«»ìºÏ×´Ì¬µÄ²ÎÊıÉèÖÃÓĞ¹Ø¡£ÏÂÃæÊÇÃ¿¸ö´íÎóµÄÏêÏ¸·ÖÎö£º
-
-### 1. ÎŞĞ§µÄ_bool32_Öµ
-```
-ÑéÖ¤´íÎó: [ UNASSIGNED-GeneralParameterError-UnrecognizedBool32 ] | MessageID = 0xa320b052 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].blendEnable (3435973836) ²»ÊÇ VK_TRUE »ò VK_FALSE¡£
-```
-- **ÎÊÌâ**: `blendEnable` ×Ö¶ÎÓ¦¸ÃÊÇ²¼¶ûÖµ£¨`VK_TRUE` »ò `VK_FALSE`£©£¬µ«½ÓÊÕµ½Ò»¸öÎŞĞ§µÄÖµ£¨3435973836£©¡£
-- **½â¾ö·½°¸**: È·±£½« `blendEnable` ÉèÖÃÎª `VK_TRUE` »ò `VK_FALSE`¡£
-
-### 2. ÎŞĞ§µÄÔ´ÑÕÉ«»ìºÏÒò×Ó
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-srcColorBlendFactor-parameter ] | MessageID = 0xeb9e690 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].srcColorBlendFactor (3435973836) ²»ÔÚ VkBlendFactor Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `srcColorBlendFactor` Ó¦¸ÃÊÇÓĞĞ§µÄ `VkBlendFactor` Ã¶¾ÙÖµ£¬µ«ÉèÖÃÁËÒ»¸öÎŞĞ§µÄÊı×Ö£¨3435973836£©¡£
-- **½â¾ö·½°¸**: ¼ì²é¸³¸ø `srcColorBlendFactor` µÄÖµ£¬È·±£Ëü·ûºÏ¶¨ÒåµÄ `VkBlendFactor` Öµ£¨ÀıÈç£¬`VK_BLEND_FACTOR_ZERO`¡¢`VK_BLEND_FACTOR_ONE` µÈ£©¡£
-
-### 3. ÎŞĞ§µÄÄ¿±êÑÕÉ«»ìºÏÒò×Ó
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-dstColorBlendFactor-parameter ] | MessageID = 0x8db942fe | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].dstColorBlendFactor (3435973836) ²»ÔÚ VkBlendFactor Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `dstColorBlendFactor` Í¬ÑùÊÇÉèÖÃÎªÎŞĞ§Öµ¡£
-- **½â¾ö·½°¸**: È·±£ `dstColorBlendFactor` ±»¸³ÓèÒ»¸öÓĞĞ§µÄ `VkBlendFactor` Öµ¡£
-
-### 4. ÎŞĞ§µÄÑÕÉ«»ìºÏ²Ù×÷
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-colorBlendOp-parameter ] | MessageID = 0x7978ef4f | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].colorBlendOp (3435973836) ²»ÔÚ VkBlendOp Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `colorBlendOp` ²ÎÊıÉèÖÃÎªÎŞĞ§Öµ¡£
-- **½â¾ö·½°¸**: Îª `colorBlendOp` ¸³ÓèÓĞĞ§µÄ `VkBlendOp` Öµ¡£
-
-### 5. ÎŞĞ§µÄÔ´ alpha »ìºÏÒò×Ó
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-srcAlphaBlendFactor-parameter ] | MessageID = 0x4a7f8ed8 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].srcAlphaBlendFactor (3358545944) ²»ÔÚ VkBlendFactor Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `srcAlphaBlendFactor` ÉèÖÃÎªÎŞĞ§Öµ¡£
-- **½â¾ö·½°¸**: È·±£ `srcAlphaBlendFactor` ±»¸³ÓèÒ»¸öÓĞĞ§µÄ `VkBlendFactor` Öµ¡£
-
-### 6. ÎŞĞ§µÄÄ¿±ê alpha »ìºÏÒò×Ó
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-dstAlphaBlendFactor-parameter ] | MessageID = 0x53ab1c8f | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].dstAlphaBlendFactor (496) ²»ÔÚ VkBlendFactor Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `dstAlphaBlendFactor` ÉèÖÃÎªÎŞĞ§Öµ¡£
-- **½â¾ö·½°¸**: ½« `dstAlphaBlendFactor` ÉèÖÃÎªÓĞĞ§µÄ `VkBlendFactor` Öµ¡£
-
-### 7. ÎŞĞ§µÄ alpha »ìºÏ²Ù×÷
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-alphaBlendOp-parameter ] | MessageID = 0x48f9f9b | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].alphaBlendOp (4127412873) ²»ÔÚ VkBlendOp Ã¶¾ÙµÄÓĞĞ§·¶Î§ÄÚ£¬ÇÒ²»ÊÇÀ©Õ¹Ìí¼ÓµÄ±ê¼Ç¡£
-```
-- **ÎÊÌâ**: `alphaBlendOp` ÎªÎŞĞ§Öµ¡£
-- **½â¾ö·½°¸**: Îª `alphaBlendOp` ÉèÖÃÓĞĞ§µÄ `VkBlendOp` Öµ¡£
-
-### 8. ÎŞĞ§µÄÑÕÉ«Ğ´ÑÚÂë
-```
-ÑéÖ¤´íÎó: [ VUID-VkPipelineColorBlendAttachmentState-colorWriteMask-parameter ] | MessageID = 0xb8f9c032 | vkCreateGraphicsPipelines(): pCreateInfos[0].pColorBlendState->pAttachments[0].colorWriteMask °üº¬ (0x36b2) ÎŞ·¨Ê¶±ğµÄ VkColorComponentFlagBits ³ÉÔ±¡£
-```
-- **ÎÊÌâ**: `colorWriteMask` ÖĞ°üº¬ÁËÎŞĞ§µÄ±êÖ¾Î»¡£
-- **½â¾ö·½°¸**: ½« `colorWriteMask` ÉèÖÃÎªÓĞĞ§µÄ `VkColorComponentFlagBits` ×éºÏ£¨ÀıÈç£¬`VK_COLOR_COMPONENT_R_BIT`¡¢`VK_COLOR_COMPONENT_G_BIT` µÈ£©¡£
-
-### ×Ü½á
-Òª½â¾öÕâĞ©´íÎó£¬Çë×ĞÏ¸¼ì²é¸³Öµ¸øÑÕÉ«»ìºÏ×´Ì¬¸÷¸ö²ÎÊıµÄÖµ£¬È·±£ËüÃÇ·ûºÏ Vulkan ¹æ·¶ÖĞËùÒªÇóµÄÓĞĞ§Öµ¡£Èç¹û²»È·¶¨ÕıÈ·µÄÖµ£¬¿ÉÒÔ²éÔÄÄãËùÊ¹ÓÃµÄ Vulkan °æ±¾µÄÎÄµµ¡£Õâ½«ÓĞÖúÓÚÄã¾ÀÕı´úÂë²¢Ïû³ıÑéÖ¤´íÎó¡£Èç¹û»¹ÓĞÆäËûÎÊÌâ£¬ËæÊ±ÎÊÎÒ£¡
-
-*/
+}  // namespace lve

@@ -5,24 +5,24 @@
 #include <stdexcept>
 
 namespace lve {
-	//µ¥¶À°ó¶¨ÕâÐ©ÃèÊö·ûÊÇµÍÐ§µÄ£¬Ó¦¸Ã¸ù¾ÝËüÃÇµÄ°ó¶¨ÆµÂÊ·Ö×éÎª¼¯ºÏ
+	//å•ç‹¬ç»‘å®šè¿™äº›æè¿°ç¬¦æ˜¯ä½Žæ•ˆçš„ï¼Œåº”è¯¥æ ¹æ®å®ƒä»¬çš„ç»‘å®šé¢‘çŽ‡åˆ†ç»„ä¸ºé›†åˆ
 	// *************** Descriptor Set Layout Builder *********************
 
-	//Ìí¼ÓÒ»¸öÐÂµÄ°ó¶¨ÐÅÏ¢µ½ÃèÊö·û¼¯²¼¾ÖµÄ¹¹½¨Æ÷ÖÐ£¬ÒÔ±ãºóÐø´´½¨ÃèÊö·û¼¯²¼¾Ö¡£
+	//æ·»åŠ ä¸€ä¸ªæ–°çš„ç»‘å®šä¿¡æ¯åˆ°æè¿°ç¬¦é›†å¸ƒå±€çš„æž„å»ºå™¨ä¸­ï¼Œä»¥ä¾¿åŽç»­åˆ›å»ºæè¿°ç¬¦é›†å¸ƒå±€ã€‚
 	LVEDescriptorSetLayout::Builder& LVEDescriptorSetLayout::Builder::addBinding(
-		uint32_t binding,						//°ó¶¨µÄË÷Òý¡£Ã¿¸ö°ó¶¨¶¼ÓÐÒ»¸öÎ¨Ò»µÄË÷Òý£¬ÓÃÓÚÔÚÃèÊö·û¼¯²¼¾ÖÖÐ±êÊ¶¸Ã°ó¶¨¡£
-		VkDescriptorType descriptorType,		//ÃèÊö·ûµÄÀàÐÍ¡£ËüÖ¸¶¨¸Ã°ó¶¨ËùÊ¹ÓÃµÄ×ÊÔ´ÀàÐÍ£¬Õâ¿ÉÄÜÊÇ»º³åÇø¡¢Í¼ÏñµÈ¡£
-		VkShaderStageFlags stageFlags,			//×ÅÉ«Æ÷½×¶Î±êÖ¾¡£ÕâÐ©±êÖ¾Ö¸Ã÷ÄÄÐ©×ÅÉ«Æ÷½×¶Î¿ÉÒÔ·ÃÎÊµ±Ç°°ó¶¨µÄ×ÊÔ´£¨ÀýÈç¶¥µã×ÅÉ«Æ÷¡¢Æ¬¶Î×ÅÉ«Æ÷µÈ£©¡£
-		uint32_t count)							//ÃèÊö·ûµÄÊýÁ¿¡£ÕâÍ¨³£ÔÚ°ó¶¨ÊÇÊý×éÀàÐÍÊ±Ê¹ÓÃ¡£Èç¹ûÊÇµ¥¸ö×ÊÔ´£¬ÔòÍ¨³£Îª 1¡£
+		uint32_t binding,						//ç»‘å®šçš„ç´¢å¼•ã€‚æ¯ä¸ªç»‘å®šéƒ½æœ‰ä¸€ä¸ªå”¯ä¸€çš„ç´¢å¼•ï¼Œç”¨äºŽåœ¨æè¿°ç¬¦é›†å¸ƒå±€ä¸­æ ‡è¯†è¯¥ç»‘å®šã€‚
+		VkDescriptorType descriptorType,		//æè¿°ç¬¦çš„ç±»åž‹ã€‚å®ƒæŒ‡å®šè¯¥ç»‘å®šæ‰€ä½¿ç”¨çš„èµ„æºç±»åž‹ï¼Œè¿™å¯èƒ½æ˜¯ç¼“å†²åŒºã€å›¾åƒç­‰ã€‚
+		VkShaderStageFlags stageFlags,			//ç€è‰²å™¨é˜¶æ®µæ ‡å¿—ã€‚è¿™äº›æ ‡å¿—æŒ‡æ˜Žå“ªäº›ç€è‰²å™¨é˜¶æ®µå¯ä»¥è®¿é—®å½“å‰ç»‘å®šçš„èµ„æºï¼ˆä¾‹å¦‚é¡¶ç‚¹ç€è‰²å™¨ã€ç‰‡æ®µç€è‰²å™¨ç­‰ï¼‰ã€‚
+		uint32_t count)							//æè¿°ç¬¦çš„æ•°é‡ã€‚è¿™é€šå¸¸åœ¨ç»‘å®šæ˜¯æ•°ç»„ç±»åž‹æ—¶ä½¿ç”¨ã€‚å¦‚æžœæ˜¯å•ä¸ªèµ„æºï¼Œåˆ™é€šå¸¸ä¸º 1ã€‚
 	{
 		assert(bindings.count(binding) == 0 && "Binding already in use");
-		VkDescriptorSetLayoutBinding layoutBinding{};		//´æ´¢¹ØÓÚÃèÊö·û°ó¶¨µÄÐÅÏ¢¡£
+		VkDescriptorSetLayoutBinding layoutBinding{};		//å­˜å‚¨å…³äºŽæè¿°ç¬¦ç»‘å®šçš„ä¿¡æ¯ã€‚
 		layoutBinding.binding = binding;
 		layoutBinding.descriptorType = descriptorType;
 		layoutBinding.descriptorCount = count;
 		layoutBinding.stageFlags = stageFlags;
-		bindings[binding] = layoutBinding;					//ÐÂ¶¨ÒåµÄ°ó¶¨ÐÅÏ¢¼ÇÂ¼µ½¹¹½¨Æ÷ÖÐ¡£
-		return *this;										//·µ»Øµ±Ç°¶ÔÏóµÄÒýÓÃ£¬ÒÔÖ§³ÖÁ´Ê½µ÷ÓÃ¡£ÕâÑù¿ÉÒÔÁ¬Ðøµ÷ÓÃ addBinding ·½·¨À´Ìí¼Ó¶à¸ö°ó¶¨¡£
+		bindings[binding] = layoutBinding;					//æ–°å®šä¹‰çš„ç»‘å®šä¿¡æ¯è®°å½•åˆ°æž„å»ºå™¨ä¸­ã€‚
+		return *this;										//è¿”å›žå½“å‰å¯¹è±¡çš„å¼•ç”¨ï¼Œä»¥æ”¯æŒé“¾å¼è°ƒç”¨ã€‚è¿™æ ·å¯ä»¥è¿žç»­è°ƒç”¨ addBinding æ–¹æ³•æ¥æ·»åŠ å¤šä¸ªç»‘å®šã€‚
 	}
 
 	std::unique_ptr<LVEDescriptorSetLayout> LVEDescriptorSetLayout::Builder::build() const {
@@ -35,7 +35,7 @@ namespace lve {
 		LVEDevice& lveDevice, std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings)
 		: lveDevice{ lveDevice }, bindings{ bindings } 
 	{
-		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};//ÌáÈ¡µÄÃèÊö·û¼¯²¼¾Ö°ó¶¨ÐÅÏ¢¡£
+		std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};//æå–çš„æè¿°ç¬¦é›†å¸ƒå±€ç»‘å®šä¿¡æ¯ã€‚
 		for (auto kv : bindings) {
 			setLayoutBindings.push_back(kv.second);
 		}
@@ -59,7 +59,7 @@ namespace lve {
 	}
 
 	// *************** Descriptor Pool Builder *********************
-	//ÏòÃèÊö·û³ØÖÐÌí¼ÓÒ»ÖÖÃèÊö·ûÀàÐÍÒÔ¼°ÆäÊýÁ¿¡£count£º³ØÖÐ·ÖÅäµÄ¸ÃÀàÐÍÃèÊö·ûµÄÉÏÏÞ
+	//å‘æè¿°ç¬¦æ± ä¸­æ·»åŠ ä¸€ç§æè¿°ç¬¦ç±»åž‹ä»¥åŠå…¶æ•°é‡ã€‚countï¼šæ± ä¸­åˆ†é…çš„è¯¥ç±»åž‹æè¿°ç¬¦çš„ä¸Šé™
 	LVEDescriptorPool::Builder& LVEDescriptorPool::Builder::addPoolSize(
 		VkDescriptorType descriptorType, uint32_t count) 
 	{
@@ -67,14 +67,14 @@ namespace lve {
 		return *this;
 	}
 
-	//ÃèÊö·û³ØµÄ´´½¨±êÖ¾£¬¿ØÖÆ³ØµÄÐÐÎª£¨ÀýÈç£¬ÊÇ·ñ¿ÉÒÔÖØÓÃµÈ£©¡£
+	//æè¿°ç¬¦æ± çš„åˆ›å»ºæ ‡å¿—ï¼ŒæŽ§åˆ¶æ± çš„è¡Œä¸ºï¼ˆä¾‹å¦‚ï¼Œæ˜¯å¦å¯ä»¥é‡ç”¨ç­‰ï¼‰ã€‚
 	LVEDescriptorPool::Builder& LVEDescriptorPool::Builder::setPoolFlags(
 		VkDescriptorPoolCreateFlags flags) {
 		poolFlags = flags;
 		return *this;
 	}
 
-	//ÉèÖÃÃèÊö·û³Ø¿ÉÒÔ·ÖÅäµÄ×î´óÃèÊö·û¼¯ÊýÁ¿¡£
+	//è®¾ç½®æè¿°ç¬¦æ± å¯ä»¥åˆ†é…çš„æœ€å¤§æè¿°ç¬¦é›†æ•°é‡ã€‚
 	LVEDescriptorPool::Builder& LVEDescriptorPool::Builder::setMaxSets(uint32_t count) {
 		maxSets = count;
 		return *this;
@@ -85,7 +85,7 @@ namespace lve {
 	}
 
 	// *************** Descriptor Pool *********************
-	//´´½¨Ò»¸ö Vulkan ÃèÊö·û³Ø£¬½ÓÊÕÉè±¸¡¢×î´ó¼¯ºÏÊý¡¢´´½¨±êÖ¾ºÍÃèÊö·û³Ø´óÐ¡ÐÅÏ¢£¬²¢Ê¹ÓÃÕâÐ©ÐÅÏ¢À´ÉèÖÃÃèÊö·û³ØµÄ²ÎÊý¡£
+	//åˆ›å»ºä¸€ä¸ª Vulkan æè¿°ç¬¦æ± ï¼ŒæŽ¥æ”¶è®¾å¤‡ã€æœ€å¤§é›†åˆæ•°ã€åˆ›å»ºæ ‡å¿—å’Œæè¿°ç¬¦æ± å¤§å°ä¿¡æ¯ï¼Œå¹¶ä½¿ç”¨è¿™äº›ä¿¡æ¯æ¥è®¾ç½®æè¿°ç¬¦æ± çš„å‚æ•°ã€‚
 	LVEDescriptorPool::LVEDescriptorPool(
 		LVEDevice& lveDevice,
 		uint32_t maxSets,
@@ -110,17 +110,17 @@ namespace lve {
 		vkDestroyDescriptorPool(lveDevice.device(), descriptorPool, nullptr);
 	}
 
-	//ÓÃÓÚ´ÓÃèÊö·û³ØÖÐ·ÖÅäÒ»¸öÃèÊö·û¼¯¡£
+	//ç”¨äºŽä»Žæè¿°ç¬¦æ± ä¸­åˆ†é…ä¸€ä¸ªæè¿°ç¬¦é›†ã€‚
 	bool LVEDescriptorPool::allocateDescriptor(
 		const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet& descriptor) const {
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = descriptorPool;				//±íÊ¾½«´ÓÄÄ¸öÃèÊö·û³ØÖÐ·ÖÅäÃèÊö·û¼¯¡£
-		allocInfo.pSetLayouts = &descriptorSetLayout;			//Ö¸¶¨·ÖÅäµÄÃèÊö·û¼¯µÄ²¼¾Ö¡£
-		allocInfo.descriptorSetCount = 1;						//±íÊ¾Òª·ÖÅäÒ»¸öÃèÊö·û¼¯¡£
+		allocInfo.descriptorPool = descriptorPool;				//è¡¨ç¤ºå°†ä»Žå“ªä¸ªæè¿°ç¬¦æ± ä¸­åˆ†é…æè¿°ç¬¦é›†ã€‚
+		allocInfo.pSetLayouts = &descriptorSetLayout;			//æŒ‡å®šåˆ†é…çš„æè¿°ç¬¦é›†çš„å¸ƒå±€ã€‚
+		allocInfo.descriptorSetCount = 1;						//è¡¨ç¤ºè¦åˆ†é…ä¸€ä¸ªæè¿°ç¬¦é›†ã€‚
 
-		// ¿ÉÄÜÏëÒª´´½¨Ò»¸ö¡°DescriptorPoolManager¡±ÀàÀ´´¦ÀíÕâÖÖÇé¿ö£¬²¢¹¹½¨
-		// Ã¿µ±¾É³ØÌîÂúÊ±¾Í´´½¨ÐÂ³Ø¡£µ«Õâ³¬³öÁËÎÒÃÇÄ¿Ç°µÄ·¶Î§
+		// å¯èƒ½æƒ³è¦åˆ›å»ºä¸€ä¸ªâ€œDescriptorPoolManagerâ€ç±»æ¥å¤„ç†è¿™ç§æƒ…å†µï¼Œå¹¶æž„å»º
+		// æ¯å½“æ—§æ± å¡«æ»¡æ—¶å°±åˆ›å»ºæ–°æ± ã€‚ä½†è¿™è¶…å‡ºäº†æˆ‘ä»¬ç›®å‰çš„èŒƒå›´
 		if (vkAllocateDescriptorSets(lveDevice.device(), &allocInfo, &descriptor) != VK_SUCCESS) {
 			return false;
 		}
@@ -157,16 +157,16 @@ namespace lve {
 		VkWriteDescriptorSet write{};
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		write.descriptorType = bindingDescription.descriptorType;
-		write.dstBinding = binding;				//Ö¸Ã÷ÒªÐ´ÈëµÄÃèÊö·û¼¯µÄ¾ßÌåÎ»ÖÃ¡£
-		write.pBufferInfo = bufferInfo;			//Ð´ÈëµÄÃèÊö·û¼¯¾ÍÖªµÀÄÄÒ»¸ö»º³åÇøµÄÐÅÏ¢ÐèÒª¸üÐÂ¡£°üº¬ÓÐ¹Ø»º³åÇøµÄÐÅÏ¢£¬Èç»º³åÇøµÄ¾ä±ú¡¢Æ«ÒÆÁ¿ºÍ·¶Î§¡£
+		write.dstBinding = binding;				//æŒ‡æ˜Žè¦å†™å…¥çš„æè¿°ç¬¦é›†çš„å…·ä½“ä½ç½®ã€‚
+		write.pBufferInfo = bufferInfo;			//å†™å…¥çš„æè¿°ç¬¦é›†å°±çŸ¥é“å“ªä¸€ä¸ªç¼“å†²åŒºçš„ä¿¡æ¯éœ€è¦æ›´æ–°ã€‚åŒ…å«æœ‰å…³ç¼“å†²åŒºçš„ä¿¡æ¯ï¼Œå¦‚ç¼“å†²åŒºçš„å¥æŸ„ã€åç§»é‡å’ŒèŒƒå›´ã€‚
 		write.descriptorCount = 1;
 
 		writes.push_back(write);
 		return *this;
 	}
 
-	//½«Í¼ÏñÐÅÏ¢Ð´Èë Vulkan ÃèÊö·û¼¯ÖÐ¡£
-	//ÎªÖ¸¶¨µÄÃèÊö·û°ó¶¨´´½¨Ò»¸öÐ´²Ù×÷£¬ÏòÃèÊö·û¼¯ÖÐ×¢²áÒ»¸öÍ¼ÏñµÄÐÅÏ¢£¨ÈçÍ¼ÏñµÄÊÓÍ¼ºÍ²ÉÑùÆ÷ÐÅÏ¢£©£¬²¢½«Ð´ÈëÐÅÏ¢´æ´¢ÔÚÒ»¸öÐ´²Ù×÷ÁÐ±íÖÐ£¬ÒÔ±ãºóÐø¸üÐÂÃèÊö·û¼¯¡£
+	//å°†å›¾åƒä¿¡æ¯å†™å…¥ Vulkan æè¿°ç¬¦é›†ä¸­ã€‚
+	//ä¸ºæŒ‡å®šçš„æè¿°ç¬¦ç»‘å®šåˆ›å»ºä¸€ä¸ªå†™æ“ä½œï¼Œå‘æè¿°ç¬¦é›†ä¸­æ³¨å†Œä¸€ä¸ªå›¾åƒçš„ä¿¡æ¯ï¼ˆå¦‚å›¾åƒçš„è§†å›¾å’Œé‡‡æ ·å™¨ä¿¡æ¯ï¼‰ï¼Œå¹¶å°†å†™å…¥ä¿¡æ¯å­˜å‚¨åœ¨ä¸€ä¸ªå†™æ“ä½œåˆ—è¡¨ä¸­ï¼Œä»¥ä¾¿åŽç»­æ›´æ–°æè¿°ç¬¦é›†ã€‚
 	LVEDescriptorWriter& LVEDescriptorWriter::writeImage(
 		uint32_t binding, VkDescriptorImageInfo* imageInfo) {
 		assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
@@ -208,44 +208,44 @@ namespace lve {
 
 
 /*
-ÔÚ Vulkan ÖÐ£¬**ÃèÊö·û¼¯**¡¢**ÃèÊö·û³Ø**¡¢**ÃèÊö·û¼¯²¼¾Ö**ºÍ**ÃèÊö·û¼¯Ð´Èë**Ö®¼ä´æÔÚ×Å½ôÃÜµÄ¹ØÏµ£¬ËüÃÇ¹²Í¬¹¹³ÉÁË Vulkan ×ÊÔ´¹ÜÀíºÍ×ÅÉ«Æ÷×ÊÔ´°ó¶¨µÄ»ù´¡¡£ÒÔÏÂÊÇ¶ÔÃ¿¸öÒªËØµÄÏêÏ¸ÃèÊö¼°ÆäÏà»¥¹ØÏµ¡£
+åœ¨ Vulkan ä¸­ï¼Œ**æè¿°ç¬¦é›†**ã€**æè¿°ç¬¦æ± **ã€**æè¿°ç¬¦é›†å¸ƒå±€**å’Œ**æè¿°ç¬¦é›†å†™å…¥**ä¹‹é—´å­˜åœ¨ç€ç´§å¯†çš„å…³ç³»ï¼Œå®ƒä»¬å…±åŒæž„æˆäº† Vulkan èµ„æºç®¡ç†å’Œç€è‰²å™¨èµ„æºç»‘å®šçš„åŸºç¡€ã€‚ä»¥ä¸‹æ˜¯å¯¹æ¯ä¸ªè¦ç´ çš„è¯¦ç»†æè¿°åŠå…¶ç›¸äº’å…³ç³»ã€‚
 
-### 1. ÃèÊö·û¼¯£¨Descriptor Set£©
-ÃèÊö·û¼¯ÊÇÒ»¸ö¼¯ºÏ£¬°üº¬ÁËÒ»×éÃèÊö·û£¨Descriptor£©£¬ÕâÐ©ÃèÊö·ûÖ¸ÏòÁË GPU ×ÊÔ´£¨ÈçÎÆÀí¡¢»º³åÇøµÈ£©¡£ÃèÊö·û¼¯ÔÚäÖÈ¾¹ÜÏßÖÐÓÃÓÚÌá¹©×ÅÉ«Æ÷ËùÐèµÄ×ÊÔ´Êý¾Ý¡£Ã¿¸öÃèÊö·û¼¯¿ÉÒÔ°üº¬¶à¸öÃèÊö·û£¬²¢ÇÒÔÚ»æÖÆµ÷ÓÃÖÐ»á½«Æä°ó¶¨µ½Í¼ÐÎ¹ÜÏß¡£
+### 1. æè¿°ç¬¦é›†ï¼ˆDescriptor Setï¼‰
+æè¿°ç¬¦é›†æ˜¯ä¸€ä¸ªé›†åˆï¼ŒåŒ…å«äº†ä¸€ç»„æè¿°ç¬¦ï¼ˆDescriptorï¼‰ï¼Œè¿™äº›æè¿°ç¬¦æŒ‡å‘äº† GPU èµ„æºï¼ˆå¦‚çº¹ç†ã€ç¼“å†²åŒºç­‰ï¼‰ã€‚æè¿°ç¬¦é›†åœ¨æ¸²æŸ“ç®¡çº¿ä¸­ç”¨äºŽæä¾›ç€è‰²å™¨æ‰€éœ€çš„èµ„æºæ•°æ®ã€‚æ¯ä¸ªæè¿°ç¬¦é›†å¯ä»¥åŒ…å«å¤šä¸ªæè¿°ç¬¦ï¼Œå¹¶ä¸”åœ¨ç»˜åˆ¶è°ƒç”¨ä¸­ä¼šå°†å…¶ç»‘å®šåˆ°å›¾å½¢ç®¡çº¿ã€‚
 
-### 2. ÃèÊö·û³Ø£¨Descriptor Pool£©
-ÃèÊö·û³ØÊÇ Vulkan ÖÐÓÃÀ´¹ÜÀíÃèÊö·û¼¯ÄÚ´æµÄ½á¹¹¡£ËüµÄ×÷ÓÃÊÇ¶¨Òå¿ÉÒÔ·ÖÅäµÄÃèÊö·ûÊýÁ¿ºÍÀàÐÍ¡£ÃèÊö·û³ØÔÚ´´½¨Ê±ÐèÒªÖ¸¶¨Æä´óÐ¡ºÍÄÜÈÝÄÉµÄÃèÊö·ûÀàÐÍ¡£Ê¹ÓÃÃèÊö·û³Ø¿ÉÒÔ·½±ãµØ¹ÜÀíºÍÖØÓÃÃèÊö·û¼¯¡£
+### 2. æè¿°ç¬¦æ± ï¼ˆDescriptor Poolï¼‰
+æè¿°ç¬¦æ± æ˜¯ Vulkan ä¸­ç”¨æ¥ç®¡ç†æè¿°ç¬¦é›†å†…å­˜çš„ç»“æž„ã€‚å®ƒçš„ä½œç”¨æ˜¯å®šä¹‰å¯ä»¥åˆ†é…çš„æè¿°ç¬¦æ•°é‡å’Œç±»åž‹ã€‚æè¿°ç¬¦æ± åœ¨åˆ›å»ºæ—¶éœ€è¦æŒ‡å®šå…¶å¤§å°å’Œèƒ½å®¹çº³çš„æè¿°ç¬¦ç±»åž‹ã€‚ä½¿ç”¨æè¿°ç¬¦æ± å¯ä»¥æ–¹ä¾¿åœ°ç®¡ç†å’Œé‡ç”¨æè¿°ç¬¦é›†ã€‚
 
-### 3. ÃèÊö·û¼¯²¼¾Ö£¨Descriptor Set Layout£©
-ÃèÊö·û¼¯²¼¾Ö¶¨ÒåÁËÃèÊö·û¼¯µÄ½á¹¹¼°Æä°üº¬µÄÃèÊö·ûÀàÐÍºÍ°ó¶¨ÐÅÏ¢¡£ËüÃèÊöÁË£¬¸÷¸öÃèÊö·ûÔÚÃèÊö·û¼¯ÖÐµÄÎ»ÖÃ£¬ÒÔ¼°ÕâÐ©ÃèÊö·ûµÄÀàÐÍ£¨ÈçÍ³Ò»»º³åÇø¡¢Í¼Ïñ²ÉÑù¡¢´æ´¢»º³åÇøµÈ£©ºÍÆä°ó¶¨µãÔÚ×ÅÉ«Æ÷ÖÐµÄÊ¹ÓÃ·½Ê½¡£ÃèÊö·û¼¯²¼¾ÖÊÇ¹Ì¶¨µÄ£¬Ò»µ©´´½¨ºó±ã²»ÄÜ¸ü¸Ä¡£
+### 3. æè¿°ç¬¦é›†å¸ƒå±€ï¼ˆDescriptor Set Layoutï¼‰
+æè¿°ç¬¦é›†å¸ƒå±€å®šä¹‰äº†æè¿°ç¬¦é›†çš„ç»“æž„åŠå…¶åŒ…å«çš„æè¿°ç¬¦ç±»åž‹å’Œç»‘å®šä¿¡æ¯ã€‚å®ƒæè¿°äº†ï¼Œå„ä¸ªæè¿°ç¬¦åœ¨æè¿°ç¬¦é›†ä¸­çš„ä½ç½®ï¼Œä»¥åŠè¿™äº›æè¿°ç¬¦çš„ç±»åž‹ï¼ˆå¦‚ç»Ÿä¸€ç¼“å†²åŒºã€å›¾åƒé‡‡æ ·ã€å­˜å‚¨ç¼“å†²åŒºç­‰ï¼‰å’Œå…¶ç»‘å®šç‚¹åœ¨ç€è‰²å™¨ä¸­çš„ä½¿ç”¨æ–¹å¼ã€‚æè¿°ç¬¦é›†å¸ƒå±€æ˜¯å›ºå®šçš„ï¼Œä¸€æ—¦åˆ›å»ºåŽä¾¿ä¸èƒ½æ›´æ”¹ã€‚
 
-### 4. ÃèÊö·û¼¯Ð´Èë£¨Descriptor Set Write£©
-ÃèÊö·û¼¯Ð´ÈëÊÇ½«Êµ¼Ê×ÊÔ´£¨ÀýÈç»º³åÇø»òÎÆÀí£©°ó¶¨µ½ÃèÊö·û¼¯ÖÐ¶ÔÓ¦µÄÃèÊö·û¡£ÕâÍ¨³£Í¨¹ý `vkUpdateDescriptorSets` º¯ÊýÍê³É£¬Í¨¹ý´«Èë¾ßÌåµÄ×ÊÔ´ÐÅÏ¢£¬½«ÆäÌî³äµ½ÃèÊö·û¼¯ÖÐ¡£ÔÚäÖÈ¾¹ý³ÌÖÐ£¬×ÅÉ«Æ÷»áÊ¹ÓÃÕâÐ©ÃèÊö·ûÀ´·ÃÎÊ°ó¶¨ºÃµÄ×ÊÔ´¡£
+### 4. æè¿°ç¬¦é›†å†™å…¥ï¼ˆDescriptor Set Writeï¼‰
+æè¿°ç¬¦é›†å†™å…¥æ˜¯å°†å®žé™…èµ„æºï¼ˆä¾‹å¦‚ç¼“å†²åŒºæˆ–çº¹ç†ï¼‰ç»‘å®šåˆ°æè¿°ç¬¦é›†ä¸­å¯¹åº”çš„æè¿°ç¬¦ã€‚è¿™é€šå¸¸é€šè¿‡ `vkUpdateDescriptorSets` å‡½æ•°å®Œæˆï¼Œé€šè¿‡ä¼ å…¥å…·ä½“çš„èµ„æºä¿¡æ¯ï¼Œå°†å…¶å¡«å……åˆ°æè¿°ç¬¦é›†ä¸­ã€‚åœ¨æ¸²æŸ“è¿‡ç¨‹ä¸­ï¼Œç€è‰²å™¨ä¼šä½¿ç”¨è¿™äº›æè¿°ç¬¦æ¥è®¿é—®ç»‘å®šå¥½çš„èµ„æºã€‚
 
-### ÕâÐ©×é¼þÖ®¼äµÄ¹ØÏµ
-1. **´´½¨Ë³Ðò**£º
-   - Ê×ÏÈ£¬ÐèÒª´´½¨ÃèÊö·û¼¯²¼¾Ö£¬ÔÚ²¼¾ÖÖÐ¶¨ÒåÃèÊö·ûµÄÀàÐÍ¼°ÊýÁ¿¡£
-   - Æä´Î£¬´´½¨ÃèÊö·û³Ø£¬²¢¸ù¾ÝÐèÒªµÄÃèÊö·ûÀàÐÍºÍÊýÁ¿Ô¤·ÖÅäÄÚ´æ¡£
-   - È»ºó£¬´ÓÃèÊö·û³ØÖÐ·ÖÅäÃèÊö·û¼¯£¬·ÖÅäÊ±ÐèÒªÌá¹©Ö®Ç°´´½¨µÄÃèÊö·û¼¯²¼¾Ö¡£
-   - ×îºó£¬½«¾ßÌå×ÊÔ´µÄÐÅÏ¢Ð´ÈëÃèÊö·û¼¯¡£
+### è¿™äº›ç»„ä»¶ä¹‹é—´çš„å…³ç³»
+1. **åˆ›å»ºé¡ºåº**ï¼š
+   - é¦–å…ˆï¼Œéœ€è¦åˆ›å»ºæè¿°ç¬¦é›†å¸ƒå±€ï¼Œåœ¨å¸ƒå±€ä¸­å®šä¹‰æè¿°ç¬¦çš„ç±»åž‹åŠæ•°é‡ã€‚
+   - å…¶æ¬¡ï¼Œåˆ›å»ºæè¿°ç¬¦æ± ï¼Œå¹¶æ ¹æ®éœ€è¦çš„æè¿°ç¬¦ç±»åž‹å’Œæ•°é‡é¢„åˆ†é…å†…å­˜ã€‚
+   - ç„¶åŽï¼Œä»Žæè¿°ç¬¦æ± ä¸­åˆ†é…æè¿°ç¬¦é›†ï¼Œåˆ†é…æ—¶éœ€è¦æä¾›ä¹‹å‰åˆ›å»ºçš„æè¿°ç¬¦é›†å¸ƒå±€ã€‚
+   - æœ€åŽï¼Œå°†å…·ä½“èµ„æºçš„ä¿¡æ¯å†™å…¥æè¿°ç¬¦é›†ã€‚
 
-2. **Ïà»¥ÒÀÀµ**£º
-   - ÃèÊö·û¼¯²¼¾Ö¾ö¶¨ÁËÃèÊö·û¼¯µÄ¸ñÊ½ºÍÊ¹ÓÃ·½Ê½£¬È·±£ÔÚÃèÊö·û¼¯ÖÐÊ¹ÓÃµÄÃèÊö·ûÀàÐÍºÍÊýÁ¿ÓëÆä°ó¶¨µÄ×ÅÉ«Æ÷Ò»ÖÂ¡£
-   - ÃèÊö·û³ØÊÇÔÚ·ÖÅäÃèÊö·û¼¯Ê±Ê¹ÓÃµÄ£¬È·±£ÄãÓÐ×ã¹»µÄÄÚ´æ¿É¹©·ÖÅä¡£
-   - ÃèÊö·û¼¯Ð´Èë²Ù×÷ÒÀÀµÓÚÃèÊö·û¼¯ºÍÆä²¼¾Ö£¬È·±£×ÊÔ´ÕýÈ·°ó¶¨µ½ÃèÊö·û¡£
+2. **ç›¸äº’ä¾èµ–**ï¼š
+   - æè¿°ç¬¦é›†å¸ƒå±€å†³å®šäº†æè¿°ç¬¦é›†çš„æ ¼å¼å’Œä½¿ç”¨æ–¹å¼ï¼Œç¡®ä¿åœ¨æè¿°ç¬¦é›†ä¸­ä½¿ç”¨çš„æè¿°ç¬¦ç±»åž‹å’Œæ•°é‡ä¸Žå…¶ç»‘å®šçš„ç€è‰²å™¨ä¸€è‡´ã€‚
+   - æè¿°ç¬¦æ± æ˜¯åœ¨åˆ†é…æè¿°ç¬¦é›†æ—¶ä½¿ç”¨çš„ï¼Œç¡®ä¿ä½ æœ‰è¶³å¤Ÿçš„å†…å­˜å¯ä¾›åˆ†é…ã€‚
+   - æè¿°ç¬¦é›†å†™å…¥æ“ä½œä¾èµ–äºŽæè¿°ç¬¦é›†å’Œå…¶å¸ƒå±€ï¼Œç¡®ä¿èµ„æºæ­£ç¡®ç»‘å®šåˆ°æè¿°ç¬¦ã€‚
 
-### ¼òµ¥Ê¾Àý
+### ç®€å•ç¤ºä¾‹
 
-ÒÔÏÂÊÇ´´½¨ÃèÊö·û¼¯¡¢³Ø¡¢²¼¾Ö¼°Ð´ÈëµÄ¼òÒª´úÂëÊ¾Àý£º
+ä»¥ä¸‹æ˜¯åˆ›å»ºæè¿°ç¬¦é›†ã€æ± ã€å¸ƒå±€åŠå†™å…¥çš„ç®€è¦ä»£ç ç¤ºä¾‹ï¼š
 
 ```c
-// 1. ÃèÊö·û¼¯²¼¾Ö
+// 1. æè¿°ç¬¦é›†å¸ƒå±€
 VkDescriptorSetLayoutBinding layoutBinding = {};
-layoutBinding.binding = 0; // °ó¶¨µã
-layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // ÃèÊö·ûÀàÐÍ
-layoutBinding.descriptorCount = 1; // ÃèÊö·ûÊýÁ¿
-layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Ê¹ÓÃ½×¶Î
-layoutBinding.pImmutableSamplers = nullptr; // ¿ÉÑ¡£¬²»ÊÊÓÃÕâÀï
+layoutBinding.binding = 0; // ç»‘å®šç‚¹
+layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // æè¿°ç¬¦ç±»åž‹
+layoutBinding.descriptorCount = 1; // æè¿°ç¬¦æ•°é‡
+layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // ä½¿ç”¨é˜¶æ®µ
+layoutBinding.pImmutableSamplers = nullptr; // å¯é€‰ï¼Œä¸é€‚ç”¨è¿™é‡Œ
 
 VkDescriptorSetLayoutCreateInfo layoutInfo = {};
 layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -255,54 +255,54 @@ layoutInfo.pBindings = &layoutBinding;
 VkDescriptorSetLayout descriptorSetLayout;
 vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout);
 
-// 2. ÃèÊö·û³Ø
+// 2. æè¿°ç¬¦æ± 
 VkDescriptorPoolSize poolSize = {};
-poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // ÃèÊö·ûÀàÐÍ
-poolSize.descriptorCount = 1; // ÃèÊö·ûÊýÁ¿
+poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // æè¿°ç¬¦ç±»åž‹
+poolSize.descriptorCount = 1; // æè¿°ç¬¦æ•°é‡
 
 VkDescriptorPoolCreateInfo poolInfo = {};
 poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 poolInfo.poolSizeCount = 1;
 poolInfo.pPoolSizes = &poolSize;
-poolInfo.maxSets = 1; // ×î¶à·ÖÅäÒ»¸öÃèÊö·û¼¯
+poolInfo.maxSets = 1; // æœ€å¤šåˆ†é…ä¸€ä¸ªæè¿°ç¬¦é›†
 
 VkDescriptorPool descriptorPool;
 vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool);
 
-// 3. ·ÖÅäÃèÊö·û¼¯
+// 3. åˆ†é…æè¿°ç¬¦é›†
 VkDescriptorSetAllocateInfo allocInfo = {};
 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 allocInfo.descriptorPool = descriptorPool;
 allocInfo.descriptorSetCount = 1;
-allocInfo.pSetLayouts = &descriptorSetLayout; // Ê¹ÓÃµÄ²¼¾Ö
+allocInfo.pSetLayouts = &descriptorSetLayout; // ä½¿ç”¨çš„å¸ƒå±€
 
 VkDescriptorSet descriptorSet;
 vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet);
 
-// 4. ¸üÐÂÃèÊö·û¼¯£¨Ð´Èë£©
+// 4. æ›´æ–°æè¿°ç¬¦é›†ï¼ˆå†™å…¥ï¼‰
 VkDescriptorBufferInfo bufferInfo = {};
-bufferInfo.buffer = uniformBuffer; // Ö¸ÏòÊµ¼ÊµÄ»º³åÇø
+bufferInfo.buffer = uniformBuffer; // æŒ‡å‘å®žé™…çš„ç¼“å†²åŒº
 bufferInfo.offset = 0;
-bufferInfo.range = sizeof(UniformBufferObject); // »º³åÇø´óÐ¡
+bufferInfo.range = sizeof(UniformBufferObject); // ç¼“å†²åŒºå¤§å°
 
 VkWriteDescriptorSet descriptorWrite = {};
 descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-descriptorWrite.dstSet = descriptorSet; // Ä¿±êÃèÊö·û¼¯
-descriptorWrite.dstBinding = 0; // °ó¶¨Î»ÖÃ
+descriptorWrite.dstSet = descriptorSet; // ç›®æ ‡æè¿°ç¬¦é›†
+descriptorWrite.dstBinding = 0; // ç»‘å®šä½ç½®
 descriptorWrite.dstArrayElement = 0;
-descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // ÃèÊö·ûÀàÐÍ
+descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // æè¿°ç¬¦ç±»åž‹
 descriptorWrite.descriptorCount = 1;
-descriptorWrite.pBufferInfo = &bufferInfo; // Êµ¼Ê°ó¶¨µÄ»º³åÇøÐÅÏ¢
+descriptorWrite.pBufferInfo = &bufferInfo; // å®žé™…ç»‘å®šçš„ç¼“å†²åŒºä¿¡æ¯
 
 vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 ```
 
-### Ð¡½á
-- **ÃèÊö·û¼¯²¼¾Ö**¶¨ÒåÁËÃèÊö·û¼¯µÄ½á¹¹¡£
-- **ÃèÊö·û³Ø**Ìá¹©ÁËÃèÊö·û¼¯µÄÄÚ´æ¹ÜÀí¡£
-- **ÃèÊö·û¼¯**Êµ¼Ê´æ´¢ºÍÒýÓÃ GPU ×ÊÔ´¡£
-- **ÃèÊö·û¼¯Ð´Èë**½«×ÊÔ´ÐÅÏ¢°ó¶¨µ½ÃèÊö·û¼¯ÖÐ¡£
+### å°ç»“
+- **æè¿°ç¬¦é›†å¸ƒå±€**å®šä¹‰äº†æè¿°ç¬¦é›†çš„ç»“æž„ã€‚
+- **æè¿°ç¬¦æ± **æä¾›äº†æè¿°ç¬¦é›†çš„å†…å­˜ç®¡ç†ã€‚
+- **æè¿°ç¬¦é›†**å®žé™…å­˜å‚¨å’Œå¼•ç”¨ GPU èµ„æºã€‚
+- **æè¿°ç¬¦é›†å†™å…¥**å°†èµ„æºä¿¡æ¯ç»‘å®šåˆ°æè¿°ç¬¦é›†ä¸­ã€‚
 
-ÕâËÄÕßÒ»Í¬¹¹³ÉÁË Vulkan ´¦Àí×ÊÔ´ºÍ×ÅÉ«Æ÷¼äÍ¨ÐÅµÄ»ù±¾Ä£ÐÍ¡£Èç¹ûÓÐ½øÒ»²½µÄÒÉÎÊ»òÕßÐèÒª¸ü¾ßÌåµÄÀý×Ó£¬ÇëËæÊ±ÎÊÎÒ£¡
+è¿™å››è€…ä¸€åŒæž„æˆäº† Vulkan å¤„ç†èµ„æºå’Œç€è‰²å™¨é—´é€šä¿¡çš„åŸºæœ¬æ¨¡åž‹ã€‚å¦‚æžœæœ‰è¿›ä¸€æ­¥çš„ç–‘é—®æˆ–è€…éœ€è¦æ›´å…·ä½“çš„ä¾‹å­ï¼Œè¯·éšæ—¶é—®æˆ‘ï¼
 
 */

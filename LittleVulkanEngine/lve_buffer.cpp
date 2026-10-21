@@ -14,13 +14,13 @@
 namespace lve {
 
 	/**
-	 * ·µ»ØÓëÉè±¸¼æÈİËùĞèµÄ×îĞ¡ÊµÀı´óĞ¡minOffsetAlignment
+	 * è¿”å›ä¸è®¾å¤‡å…¼å®¹æ‰€éœ€çš„æœ€å°å®ä¾‹å¤§å°minOffsetAlignment
 	 *
-	 * @param instanceSize ÊµÀıµÄ´óĞ¡
-	 * @param minOffsetAlignment Æ«ÒÆÁ¿³ÉÔ±ËùĞèµÄ×îĞ¡¶ÔÆë·½Ê½£¨ÒÔ×Ö½ÚÎªµ¥Î»£©£¨ÀıÈç
+	 * @param instanceSize å®ä¾‹çš„å¤§å°
+	 * @param minOffsetAlignment åç§»é‡æˆå‘˜æ‰€éœ€çš„æœ€å°å¯¹é½æ–¹å¼ï¼ˆä»¥å­—èŠ‚ä¸ºå•ä½ï¼‰ï¼ˆä¾‹å¦‚
 	 * minUniformBufferOffsetAlignment)
 	 *
-	 * @return »º³åÇøÓ³Éäµ÷ÓÃµÄVkResult
+	 * @return ç¼“å†²åŒºæ˜ å°„è°ƒç”¨çš„VkResult
 	 */
 	VkDeviceSize LVEBuffer::getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment) {
 		if (minOffsetAlignment > 0) {
@@ -53,7 +53,7 @@ namespace lve {
 		vkFreeMemory(lveDevice.device(), memory, nullptr);
 	}
 
-	//½«»º³åÇøµÄÄÚ´æÓ³Éäµ½ CPU ¿É·ÃÎÊµÄµØÖ·¡£
+	//å°†ç¼“å†²åŒºçš„å†…å­˜æ˜ å°„åˆ° CPU å¯è®¿é—®çš„åœ°å€ã€‚
 	VkResult LVEBuffer::map(VkDeviceSize size, VkDeviceSize offset) {
 		assert(buffer && memory && "Called map on buffer before create");
 		//if (size == VK_WHOLE_SIZE) {
@@ -62,7 +62,7 @@ namespace lve {
 		return vkMapMemory(lveDevice.device(), memory, offset, size, 0, &mapped);
 	}
 
-	// ½â³ıÓ³Éä¡£
+	// è§£é™¤æ˜ å°„ã€‚
 	void LVEBuffer::unmap() {
 		if (mapped) {
 			vkUnmapMemory(lveDevice.device(), memory);
@@ -70,7 +70,7 @@ namespace lve {
 		}
 	}
 
-	// ½«Êı¾İ¸´ÖÆµ½ÒÑÓ³ÉäµÄ»º³åÇøÄÚ¡£
+	// å°†æ•°æ®å¤åˆ¶åˆ°å·²æ˜ å°„çš„ç¼“å†²åŒºå†…ã€‚
 	void LVEBuffer::writeToBuffer(void* data, VkDeviceSize size, VkDeviceSize offset) {
 		assert(mapped && "Cannot copy to unmapped buffer");
 
@@ -84,7 +84,7 @@ namespace lve {
 		}
 	}
 
-	// ·½·¨ÓÃÓÚ½«ÄÚ´æ·¶Î§µÄÄÚÈİÍ¬²½µ½ GPU£¬Õâ¶ÔÓÚ·ÇÒ»ÖÂĞÔÄÚ´æÊÇ±ØÒªµÄ¡£
+	// æ–¹æ³•ç”¨äºå°†å†…å­˜èŒƒå›´çš„å†…å®¹åŒæ­¥åˆ° GPUï¼Œè¿™å¯¹äºéä¸€è‡´æ€§å†…å­˜æ˜¯å¿…è¦çš„ã€‚
 	VkResult LVEBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
 		VkMappedMemoryRange mappedRange = {};
 		mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -94,7 +94,7 @@ namespace lve {
 		return vkFlushMappedMemoryRanges(lveDevice.device(), 1, &mappedRange);
 	}
 
-	// ·½·¨Ê¹ CPU ÄÜ¹»¿´µ½ GPU ĞŞ¸ÄµÄÄÚÈİ£¬Ò²ÊÇÓÃÓÚ·ÇÒ»ÖÂĞÔÄÚ´æ¡£
+	// æ–¹æ³•ä½¿ CPU èƒ½å¤Ÿçœ‹åˆ° GPU ä¿®æ”¹çš„å†…å®¹ï¼Œä¹Ÿæ˜¯ç”¨äºéä¸€è‡´æ€§å†…å­˜ã€‚
 	VkResult LVEBuffer::invalidate(VkDeviceSize size, VkDeviceSize offset) {
 		VkMappedMemoryRange mappedRange = {};
 		mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
@@ -104,7 +104,7 @@ namespace lve {
 		return vkInvalidateMappedMemoryRanges(lveDevice.device(), 1, &mappedRange);
 	}
 
-	// ´´½¨ÃèÊö·û»º³åÇøĞÅÏ¢
+	// åˆ›å»ºæè¿°ç¬¦ç¼“å†²åŒºä¿¡æ¯
 	VkDescriptorBufferInfo LVEBuffer::descriptorInfo(VkDeviceSize size, VkDeviceSize offset) {
 		return VkDescriptorBufferInfo{
 			buffer,
@@ -114,10 +114,10 @@ namespace lve {
 	}
 
 	/**
-	 * ½«¡°instanceSize¡±×Ö½ÚÊı¾İ¸´ÖÆµ½Ë÷ÒıÆ«ÒÆÁ¿´¦µÄÓ³Éä»º³åÇø *alignmentSize
+	 * å°†â€œinstanceSizeâ€å­—èŠ‚æ•°æ®å¤åˆ¶åˆ°ç´¢å¼•åç§»é‡å¤„çš„æ˜ å°„ç¼“å†²åŒº *alignmentSize
 	 *
-	 * @param data Ö¸ÏòÒª¸´ÖÆµÄÊı¾İµÄÖ¸Õë
-	 * @param index ÓÃÓÚÆ«ÒÆÁ¿¼ÆËã
+	 * @param data æŒ‡å‘è¦å¤åˆ¶çš„æ•°æ®çš„æŒ‡é’ˆ
+	 * @param index ç”¨äºåç§»é‡è®¡ç®—
 	 *
 	 */
 	void LVEBuffer::writeToIndex(void* data, int index) {
@@ -125,32 +125,32 @@ namespace lve {
 	}
 
 	/**
-	 * Ë¢ĞÂË÷Òı´¦µÄÄÚ´æ·¶Î§ * »º³åÇøµÄalignmentSize£¬Ê¹Æä¶ÔÉè±¸¿É¼û
+	 * åˆ·æ–°ç´¢å¼•å¤„çš„å†…å­˜èŒƒå›´ * ç¼“å†²åŒºçš„alignmentSizeï¼Œä½¿å…¶å¯¹è®¾å¤‡å¯è§
 	 *
-	 * @param index ÓÃÓÚÆ«ÒÆÁ¿¼ÆËã
+	 * @param index ç”¨äºåç§»é‡è®¡ç®—
 	 *
 	 */
 	VkResult LVEBuffer::flushIndex(int index) { return flush(alignmentSize, index * alignmentSize); }
 
 	/**
-	 * ´´½¨»º³åÇøĞÅÏ¢ÃèÊö·û
+	 * åˆ›å»ºç¼“å†²åŒºä¿¡æ¯æè¿°ç¬¦
 	 *
-	 * @param index Ö¸¶¨Ë÷Òı¸ø¶¨µÄÇøÓò *alignmentSize
+	 * @param index æŒ‡å®šç´¢å¼•ç»™å®šçš„åŒºåŸŸ *alignmentSize
 	 *
-	 * @return VkDescriptorBufferInfo ÀıÈçÔÚË÷Òı´¦
+	 * @return VkDescriptorBufferInfo ä¾‹å¦‚åœ¨ç´¢å¼•å¤„
 	 */
 	VkDescriptorBufferInfo LVEBuffer::descriptorInfoForIndex(int index) {
 		return descriptorInfo(alignmentSize, index * alignmentSize);
 	}
 
 	/**
-	 * Ê¹»º³åÇøµÄÄÚ´æ·¶Î§ÎŞĞ§ÒÔÊ¹Æä¶ÔÖ÷»ú¿É¼û
+	 * ä½¿ç¼“å†²åŒºçš„å†…å­˜èŒƒå›´æ— æ•ˆä»¥ä½¿å…¶å¯¹ä¸»æœºå¯è§
 	 *
-	 * @note ½öÊÊÓÃÓÚ·ÇÒ»ÖÂĞÔÄÚ´æ
+	 * @note ä»…é€‚ç”¨äºéä¸€è‡´æ€§å†…å­˜
 	 *
-	 * @paramindex Ö¸¶¨ÒªÊ§Ğ§µÄÇøÓò£ºindex *alignmentSize
+	 * @paramindex æŒ‡å®šè¦å¤±æ•ˆçš„åŒºåŸŸï¼šindex *alignmentSize
 	 *
-	 * @return ÎŞĞ§µ÷ÓÃµÄVkResult
+	 * @return æ— æ•ˆè°ƒç”¨çš„VkResult
 	 */
 	VkResult LVEBuffer::invalidateIndex(int index) {
 		return invalidate(alignmentSize, index * alignmentSize);

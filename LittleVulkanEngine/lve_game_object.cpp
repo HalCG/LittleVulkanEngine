@@ -2,6 +2,7 @@
 
 namespace lve {
 
+// T * Ry * Rx * Rz * S
 glm::mat4 TransformComponent::mat4() {
   const float c3 = glm::cos(rotation.z);
   const float s3 = glm::sin(rotation.z);
@@ -31,6 +32,7 @@ glm::mat4 TransformComponent::mat4() {
       {translation.x, translation.y, translation.z, 1.0f}};
 }
 
+// 用法线矩阵变换法线（含非均匀缩放的逆尺度）
 glm::mat3 TransformComponent::normalMatrix() {
   const float c3 = glm::cos(rotation.z);
   const float s3 = glm::sin(rotation.z);

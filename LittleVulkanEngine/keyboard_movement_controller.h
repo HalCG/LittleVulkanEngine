@@ -4,6 +4,10 @@
 #include "lve_window.h"
 
 namespace lve {
+	/**
+	 * 键盘控制 viewer（通常是无 model 的 GameObject）：
+	 * WASD/EQ 平移，方向键旋转；结果写入 transform，再交给 LVECamera::setViewYXZ。
+	 */
 	class KeyboardMovementController {
 	public:
 		struct KeyMappings {

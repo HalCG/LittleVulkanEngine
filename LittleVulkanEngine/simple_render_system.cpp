@@ -13,6 +13,7 @@
 
 namespace lve {
 
+	// æ¯ç‰©ä½“å°‘é‡æ•°æ®èµ° Push Constantï¼ˆä¸å¿…å  descriptorï¼‰ï¼›é¡»ä¸ sample_shader çš„ push_constant å—ä¸€è‡´
 	struct SimplePushConstantData {
 		glm::mat4 modelMatrix{ 1.f };
 		glm::mat4 normalMatrix{ 1.f };
@@ -30,19 +31,19 @@ namespace lve {
 		vkDestroyPipelineLayout(lveDevice.device(), pipelineLayout, nullptr);
 	}
 
-	//´´½¨ÁËÒ»¸ö°üº¬ÍÆËÍ³£Á¿·¶Î§µÄ¹ÜÏß²¼¾Ö£¬ÒÔ±ãÔÚ×ÅÉ«Æ÷Ö®¼ä´«µİ¶¯Ì¬Êı¾İ¡£
+	// PipelineLayout =ã€Œå¯ç”¨å“ªäº› descriptor set + push constant å¤šå¤§ã€çš„åˆåŒï¼Œåˆ›å»º Pipeline æ—¶å¿…é¡»æä¾›
 	void SimpleRenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
 		VkPushConstantRange pushConstantRange{};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(SimplePushConstantData);
+		pushConstantRange.offset = 0;                              // å—èµ·å§‹åç§»
+		pushConstantRange.size = sizeof(SimplePushConstantData); // å­—èŠ‚å¤§å°ï¼ˆæœ‰ç¡¬ä»¶ä¸Šé™ï¼‰
 
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
-		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();  // set=0 ç”¨ global layout
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 		if (vkCreatePipelineLayout(lveDevice.device(), &pipelineLayoutInfo, nullptr, &pipelineLayout) !=
@@ -51,7 +52,7 @@ namespace lve {
 		}
 	}
 
-	//ÅäÖÃ²¢´´½¨Í¼ĞÎäÖÈ¾ËùĞèµÄäÖÈ¾¹ÜµÀ£¬°üÀ¨Ö¸¶¨×ÅÉ«Æ÷ÎÄ¼şÂ·¾¶ºÍÆäËûÉèÖÃ¡£
+	// SPIR-V ç›¸å¯¹å·¥ç¨‹ç›®å½•ï¼ˆè°ƒè¯•å·¥ä½œç›®å½•=$(ProjectDir)ï¼‰
 	void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -61,33 +62,30 @@ namespace lve {
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		lvePipeline = std::make_unique<LVEPipeline>(
 			lveDevice,
-			"E:/opengl/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/sample_shader.vert.spv",
-			"E:/opengl/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/sample_shader.frag.spv",
+			"shaders/sample_shader.vert.spv",
+			"shaders/sample_shader.frag.spv",
 			pipelineConfig);
 	}
 
-	/*
-		¼ÇÂ¼ËùÓĞĞèÒªµÄÃüÁî£¨°üÀ¨°ó¶¨ÃèÊö¼¯¡¢¸üĞÂÍÆËÍ³£Á¿¡¢»æÖÆÃüÁîµÈ£©µ½ÃüÁî»º³åÇø¡£ÕâÒ»½×¶Î³ÆÎª ÃüÁî¼ÇÂ¼£¨Command Recording£©¡£
-		ËùÓĞ»æÖÆ²Ù×÷µÄÃüÁî¼ÇÂ¼ÔÚ commandBuffer ÖĞ£¬×îÖÕµÄäÖÈ¾½á¹û»áÍ¨¹ıÕâ¸öÃüÁî»º³åÇøÀ´ÊµÏÖ¡£Äã¿ÉÒÔÔÚÌá½»Õâ¸öÃüÁî»º³åÇøºóÍ¨¹ı½»»»Á´½«½á¹û³ÊÏÖµ½ÆÁÄ»ÉÏ¡£
-	*/
+	// ä»…ã€Œå½•åˆ¶ã€å‘½ä»¤ï¼šçœŸæ­£ GPU ç»˜åˆ¶å‘ç”Ÿåœ¨ endFrame â†’ vkQueueSubmit ä¹‹å
 	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
 		lvePipeline->bind(frameInfo.commandBuffer);
 
-		//½«Ò»¸öÃûÎª globalDescriptorSet µÄÃèÊö¼¯°ó¶¨µ½Í¼ĞÎ¹ÜÏß£¬ÒÔ±ãÔÚºóĞøµÄ»æÖÆµ÷ÓÃÖĞ£¬×ÅÉ«Æ÷ÄÜ¹»·ÃÎÊÆäÖĞ¶¨ÒåµÄ×ÊÔ´¡£
+		// firstSet=0 â†’ GLSL layout(set=0)ï¼›ç»‘å®šæœ¬å¸§çš„ GlobalUbo descriptor set
 		vkCmdBindDescriptorSets(
-			frameInfo.commandBuffer,			//Ëü±íÊ¾ÎÒÃÇ½«ÔÚ¸ÃÃüÁî»º³åÇøÖĞ°ó¶¨ÃèÊö¼¯¡£
-			VK_PIPELINE_BIND_POINT_GRAPHICS,	//±íÊ¾ÎÒÃÇÕıÔÚ°ó¶¨ÃèÊö¼¯µ½Í¼ĞÎ¹ÜÏß£¨¼´ÓÃÓÚ»æÖÆ²Ù×÷µÄ¹ÜÏß£©¡£
-			pipelineLayout,						//¹ÜÏß²¼¾Ö¶¨ÒåÁË¹ØÓÚÃèÊö¼¯ºÍÍÆµ¼³£Á¿µÄ½á¹¹¡£ËüÖ¸¶¨ÁËÔÚÍ¼ĞÎ¹ÜÏßäÖÈ¾Ê±ÃèÊö¼¯µÄ°²ÅÅ·½Ê½£¬È·±£ GPU ÖªµÀ´ÓÄÄĞ©ÃèÊö¼¯ÖĞ¶ÁÈ¡Êı¾İ¡£
-			0,									//ÃèÊö¼¯µÄ¶¯Ì¬Æ«ÒÆÁ¿¡£´«ÈëµÄÊÇ 0£¬±íÊ¾Ã»ÓĞÊ¹ÓÃ¶¯Ì¬Æ«ÒÆ
-			1,									//Òª°ó¶¨µÄÃèÊö¼¯µÄÊıÁ¿¡£
-			&frameInfo.globalDescriptorSet,		//Ö¸ÏòÃèÊö¼¯µÄÖ¸Õë£¬ÓÃÓÚ°ó¶¨µ½µ±Ç°µÄÃüÁî»º³åÇø¡£ÕâÀïµÄ globalDescriptorSet Í¨³£°üº¬Óë×ÅÉ«Æ÷ÖĞµÄÈ«¾Ö×ÊÔ´£¨Èç²ÄÖÊ¡¢¹âÔ´µÈ£©Ïà¹ØµÄÃèÊö¼¯¡£
-			0,									//¶¯Ì¬Æ«ÒÆÊıÁ¿Îª 0£¬±íÊ¾ÎÒÃÇÃ»ÓĞ¶îÍâµÄ¶¯Ì¬Æ«ÒÆĞèÒªÓ¦ÓÃ¡£
+			frameInfo.commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			pipelineLayout,
+			0,   // firstSet
+			1,   // descriptorSetCount
+			&frameInfo.globalDescriptorSet,
+			0,   // dynamicOffsetCountï¼ˆæœ¬å·¥ç¨‹ UBO é dynamicï¼‰
 			nullptr);
 
 		for (auto& kv : frameInfo.gameObjects) {
 			auto& obj = kv.second;
-			if (obj.model == nullptr) continue;
+			if (obj.model == nullptr) continue;  // è·³è¿‡ç‚¹å…‰ã€viewer ç­‰æ— ç½‘æ ¼å¯¹è±¡
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.normalMatrix();
@@ -99,8 +97,8 @@ namespace lve {
 				0,
 				sizeof(SimplePushConstantData),
 				&push);
-			obj.model->bind(frameInfo.commandBuffer);
-			obj.model->draw(frameInfo.commandBuffer);//draw ·½·¨È·ÊµÖ»ÊÇ½«»æÖÆÃüÁî¼ÇÂ¼µ½ commandBuffer ÖĞ£¬¶ø²»ÊÇÖ±½Ó½øĞĞ»æÖÆ¡£
+			obj.model->bind(frameInfo.commandBuffer);  // ç»‘ VB/IB
+			obj.model->draw(frameInfo.commandBuffer);  // vkCmdDraw*ï¼šåªè®°å½•ï¼Œä¸ç«‹åˆ»ä¸Šå±
 		}
 	}
 }  // namespace lve

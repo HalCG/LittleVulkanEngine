@@ -15,8 +15,8 @@ namespace lve {
 
 	LVERenderer::~LVERenderer() { freeCommandBuffers(); }
 
-	//ÖØ½¨½»»»Á´µÄ·½·¨
-	//ÖØ½»»»Á´Ê±ĞèÒª¼ì²é´°¿Ú³ß´ç£¬²¢ÔÚÉè±¸¿ÕÏĞºóÈ·±£ÈÎºÎÏÖÓĞ×ÊÔ´¶¼ÒÑÕıÈ·ÇåÀí¡£
+	//é‡å»ºäº¤æ¢é“¾çš„æ–¹æ³•
+	//é‡äº¤æ¢é“¾æ—¶éœ€è¦æ£€æŸ¥çª—å£å°ºå¯¸ï¼Œå¹¶åœ¨è®¾å¤‡ç©ºé—²åç¡®ä¿ä»»ä½•ç°æœ‰èµ„æºéƒ½å·²æ­£ç¡®æ¸…ç†ã€‚
 	void LVERenderer::recreateSwapChain() {
 		auto extent = lveWindow.getExtent();
 		while (extent.width == 0 || extent.height == 0) {
@@ -29,7 +29,7 @@ namespace lve {
 			lveSwapChain = std::make_unique<LVESwapChain>(lveDevice, extent);
 		}
 		else {
-			///!!! ÔÚÄ³Ğ©ÏµÍ³ÖĞ£¬Á½¸ö½»»»Á´²»ÄÜÔÚÍ¬Ò»´°¿ÚÉÏ¹²´æ£¬Òò´ËÕâÈ·±£ÁË¾ÉµÄ½»»»Á´Ê×ÏÈ±»Ïú»Ù»òÕßÒÆ¶¯¡£
+			///!!! åœ¨æŸäº›ç³»ç»Ÿä¸­ï¼Œä¸¤ä¸ªäº¤æ¢é“¾ä¸èƒ½åœ¨åŒä¸€çª—å£ä¸Šå…±å­˜ï¼Œå› æ­¤è¿™ç¡®ä¿äº†æ—§çš„äº¤æ¢é“¾é¦–å…ˆè¢«é”€æ¯æˆ–è€…ç§»åŠ¨ã€‚
 			std::shared_ptr<LVESwapChain> oldSwapChain = std::move(lveSwapChain);
 			lveSwapChain = std::make_unique<LVESwapChain>(lveDevice, extent, oldSwapChain);
 
@@ -39,13 +39,13 @@ namespace lve {
 		}
 	}
 
-	//·ÖÅä¡¢ÊÍ·ÅÒÔ¼°¼ÇÂ¼ Ö´ĞĞÊ±ËùĞèµÄÒ»ÏµÁĞÖ¸Áî£¬°üÀ¨ÉèÖÃÊÓ¿Ú¡¢²Ã¼ôÇøÓò£¬ÒÔ¼°»æÖÆÖ¸ÁîµÈ¡£
+	// æ¯å¸§æ§½ä¸€æ¡ primary command bufferï¼ˆå¯ç›´æ¥ vkQueueSubmitï¼‰
 	void LVERenderer::createCommandBuffers() {
 		commandBuffers.resize(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;  // ç›¸å¯¹ SECONDARYï¼ˆåµŒåœ¨ primary é‡Œï¼‰
 		allocInfo.commandPool = lveDevice.getCommandPool();
 		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
@@ -67,10 +67,11 @@ namespace lve {
 	VkCommandBuffer LVERenderer::beginFrame() {
 		assert(!isFrameStarted && "Can't call beginFrame while already in progress");
 
+		// currentImageIndexï¼šäº¤æ¢é“¾å›¾åƒä¸‹æ ‡ï¼›currentFrameIndexï¼šCPU å¸§æ§½ï¼ˆä¸¤è€…ç‹¬ç«‹ï¼‰
 		auto result = lveSwapChain->acquireNextImage(&currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			recreateSwapChain();
-			return nullptr;
+			return nullptr;  // è°ƒç”¨æ–¹åº”è·³è¿‡æœ¬å¸§ç»˜åˆ¶
 		}
 
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -89,21 +90,21 @@ namespace lve {
 		return commandBuffer;
 	}
 
-	//Ö÷Òª¹¦ÄÜÊÇ½áÊøµ±Ç°Ö¡µÄäÖÈ¾¹ı³Ì¡£
+	//ä¸»è¦åŠŸèƒ½æ˜¯ç»“æŸå½“å‰å¸§çš„æ¸²æŸ“è¿‡ç¨‹ã€‚
 	void LVERenderer::endFrame() {
 		assert(isFrameStarted && "Can't call endFrame while frame is not in progress");
 
-		//1. »ñÈ¡µ±Ç°µÄÃüÁî»º³åÇø£¨command buffer£©£¬Õâ¸ö»º³åÇøÓÃÓÚ´æ´¢µ±Ç°Ö¡µÄäÖÈ¾ÃüÁî¡£
+		//1. è·å–å½“å‰çš„å‘½ä»¤ç¼“å†²åŒºï¼ˆcommand bufferï¼‰ï¼Œè¿™ä¸ªç¼“å†²åŒºç”¨äºå­˜å‚¨å½“å‰å¸§çš„æ¸²æŸ“å‘½ä»¤ã€‚
 		auto commandBuffer = getCurrentCommandBuffer();
-		//2. µ÷ÓÃ vkEndCommandBuffer º¯ÊıÀ´½áÊøµ±Ç°µÄÃüÁî»º³åÇø¼ÇÂ¼
+		//2. è°ƒç”¨ vkEndCommandBuffer å‡½æ•°æ¥ç»“æŸå½“å‰çš„å‘½ä»¤ç¼“å†²åŒºè®°å½•
 		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to record command buffer!");
 		}
 
-		//3. Ìá½»ÃüÁî»º³åÇøµ½½»»»Á´£¨swap chain£©½øĞĞäÖÈ¾£¬²¢»ñÈ¡Ìá½»½á¹û¡£
+		//3. æäº¤å‘½ä»¤ç¼“å†²åŒºåˆ°äº¤æ¢é“¾ï¼ˆswap chainï¼‰è¿›è¡Œæ¸²æŸ“ï¼Œå¹¶è·å–æäº¤ç»“æœã€‚
 		auto result = lveSwapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex);
 		
-		//¼ì²éÌá½»½á¹ûÊÇ·ñÎª½»»»Á´¹ıÆÚ£¨VK_ERROR_OUT_OF_DATE_KHR£©¡¢´ÎÓÅ£¨VK_SUBOPTIMAL_KHR£©»ò´°¿ÚÊÇ·ñ±»µ÷Õû´óĞ¡¡£Èç¹ûÊÇÆäÖĞÖ®Ò»£¬ÔòĞèÒªÖØ½¨½»»»Á´¡£
+		//æ£€æŸ¥æäº¤ç»“æœæ˜¯å¦ä¸ºäº¤æ¢é“¾è¿‡æœŸï¼ˆVK_ERROR_OUT_OF_DATE_KHRï¼‰ã€æ¬¡ä¼˜ï¼ˆVK_SUBOPTIMAL_KHRï¼‰æˆ–çª—å£æ˜¯å¦è¢«è°ƒæ•´å¤§å°ã€‚å¦‚æœæ˜¯å…¶ä¸­ä¹‹ä¸€ï¼Œåˆ™éœ€è¦é‡å»ºäº¤æ¢é“¾ã€‚
 		if (result == VK_ERROR_OUT_OF_DATE_KHR 
 			|| result == VK_SUBOPTIMAL_KHR 
 			|| lveWindow.wasWindowResized()) 
@@ -116,38 +117,42 @@ namespace lve {
 		}
 
 		isFrameStarted = false;
+		// ä¸ SwapChain::submitCommandBuffers å†… currentFrame æ¨è¿›ä¸€è‡´ï¼Œè½®è½¬å¸§æ§½
 		currentFrameIndex = (currentFrameIndex + 1) % LVESwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void LVERenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {
 		assert(isFrameStarted && "Can't call beginSwapChainRenderPass if frame is not in progress");
 		assert(
-			//È·±£´«ÈëµÄÃüÁî»º³åÇøÊÇµ±Ç°Ö¡µÄÃüÁî»º³åÇø¡£
+			//ç¡®ä¿ä¼ å…¥çš„å‘½ä»¤ç¼“å†²åŒºæ˜¯å½“å‰å¸§çš„å‘½ä»¤ç¼“å†²åŒºã€‚
 			commandBuffer == getCurrentCommandBuffer() &&
 			"Can't begin render pass on command buffer from a different frame");
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassInfo.renderPass = lveSwapChain->getRenderPass();
+		// ç”¨ image ä¸‹æ ‡å– framebufferï¼ˆä¸æ˜¯ frame æ§½ï¼ï¼‰
 		renderPassInfo.framebuffer = lveSwapChain->getFrameBuffer(currentImageIndex);
-		//ÉèÖÃäÖÈ¾ÇøÓòµÄÆ«ÒÆÁ¿Îª (0, 0)£¬±íÊ¾´Ó×óÉÏ½Ç¿ªÊ¼äÖÈ¾¡£
 		renderPassInfo.renderArea.offset = { 0, 0 };
-		renderPassInfo.renderArea.extent = lveSwapChain->getSwapChainExtent();//äÖÈ¾ÇøÓòµÄ´óĞ¡
+		renderPassInfo.renderArea.extent = lveSwapChain->getSwapChainExtent();
 
+		// ä¸ RenderPass attachments é¡ºåºä¸€è‡´ï¼š0 é¢œè‰² CLEARï¼Œ1 æ·±åº¦ CLEAR
 		std::array<VkClearValue, 2> clearValues{};
-		clearValues[0].color = { 0.01f, 0.01f, 0.01f, 1.0f };
-		clearValues[1].depthStencil = { 1.0f, 0 };//ÉèÖÃÉî¶ÈÇå³ıÖµÎª 1.0£¬±íÊ¾ÍêÈ«Çå³ıÉî¶È»º³åÇø¡£
+		clearValues[0].color = { 0.01f, 0.01f, 0.01f, 1.0f };       // RGBA
+		clearValues[1].depthStencil = { 1.0f, 0 };                 // æ·±åº¦ 1=æœ€è¿œï¼›stencil=0
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassInfo.pClearValues = clearValues.data();
 
+		// INLINEï¼šåç»­ç»˜åˆ¶å‘½ä»¤ç›´æ¥å†™åœ¨è¿™æ¡ primary buffer é‡Œï¼ˆä¸ç”¨ secondaryï¼‰
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+		// ç®¡çº¿æŠŠ viewport/scissor è®¾æˆåŠ¨æ€çŠ¶æ€ï¼Œæ•…æ¯å¸§ï¼ˆæˆ–æ¯æ¬¡ begin passï¼‰è®¾ç½®
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
 		viewport.width = static_cast<float>(lveSwapChain->getSwapChainExtent().width);
 		viewport.height = static_cast<float>(lveSwapChain->getSwapChainExtent().height);
-		viewport.minDepth = 0.0f;
+		viewport.minDepth = 0.0f;  // Vulkan æ·±åº¦èŒƒå›´é€šå¸¸ [0,1]
 		viewport.maxDepth = 1.0f;
 		VkRect2D scissor{ {0, 0}, lveSwapChain->getSwapChainExtent() };
 		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -155,9 +160,9 @@ namespace lve {
 	}
 
 	void LVERenderer::endSwapChainRenderPass(VkCommandBuffer commandBuffer) {
-		//È·±£µ±Ç°Ö¡ÒÑ¾­¿ªÊ¼¡£Èç¹ûÖ¡Î´¿ªÊ¼£¬³ÌĞò½«Å×³ö´íÎóĞÅÏ¢£¬ÌáÊ¾²»ÄÜÔÚÖ¡Î´¿ªÊ¼Ê±µ÷ÓÃ¸Ã·½·¨¡£
+		//ç¡®ä¿å½“å‰å¸§å·²ç»å¼€å§‹ã€‚å¦‚æœå¸§æœªå¼€å§‹ï¼Œç¨‹åºå°†æŠ›å‡ºé”™è¯¯ä¿¡æ¯ï¼Œæç¤ºä¸èƒ½åœ¨å¸§æœªå¼€å§‹æ—¶è°ƒç”¨è¯¥æ–¹æ³•ã€‚
 		assert(isFrameStarted && "Can't call endSwapChainRenderPass if frame is not in progress");
-		//È·±£´«ÈëµÄÃüÁî»º³åÇøÊÇµ±Ç°Ö¡µÄÃüÁî»º³åÇø¡£Èç¹û²»ÊÇ£¬³ÌĞò½«Å×³ö´íÎóĞÅÏ¢¡£
+		//ç¡®ä¿ä¼ å…¥çš„å‘½ä»¤ç¼“å†²åŒºæ˜¯å½“å‰å¸§çš„å‘½ä»¤ç¼“å†²åŒºã€‚å¦‚æœä¸æ˜¯ï¼Œç¨‹åºå°†æŠ›å‡ºé”™è¯¯ä¿¡æ¯ã€‚
 		assert(
 			commandBuffer == getCurrentCommandBuffer() &&
 			"Can't end render pass on command buffer from a different frame");

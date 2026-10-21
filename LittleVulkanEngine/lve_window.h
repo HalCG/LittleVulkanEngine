@@ -6,52 +6,43 @@
 #include <GLFW/glfw3.h>
 
 namespace lve {
+	/**
+	 * GLFW çª—å£å°è£…ã€‚
+	 * èŒè´£ï¼šåˆ›å»ºåŸç”Ÿçª—å£ã€è½¬å‘ framebuffer å°ºå¯¸å˜åŒ–ã€ä¸º Vulkan åˆ›å»º Surfaceã€‚
+	 * å…³é”®çŠ¶æ€ï¼šwidth/heightï¼ˆä¸ framebuffer åŒæ­¥ï¼‰ã€framebufferResizedï¼ˆé€šçŸ¥ Renderer é‡å»ºäº¤æ¢é“¾ï¼‰ã€‚
+	 */
 	class LVEWindow {
 	public:
 		LVEWindow(int width, int height, std::string windowName);
 		~LVEWindow();
 
-		//É¾³ı¸´ÖÆ¹¹Ôì¼°¸´ÖÆÔËËã·û£¬ÒòÎª´°¿ÚÊÇÖ¸Õë£¬·ÀÖ¹¸´ÖÆ£»×ÊÔ´»ñÈ¡¼´³õÊ¼»¯£¬×ÊÔ´ÔÚ´°¿Ú´´½¨Ê±¾ÍÒÑ¾­³õÊ¼»¯Íê±Ï£¬ÇåÀíµÄÎ¨Ò»ÀíÓÉÊÇÎö¹¹º¯Êı
+		// çª—å£æŒæœ‰ GLFW å¥æŸ„ï¼Œç¦æ­¢æ‹·è´ï¼Œä¿è¯ RAII å”¯ä¸€æ‰€æœ‰æƒ
 		LVEWindow(const LVEWindow&) = delete;
 		LVEWindow& operator=(const LVEWindow&) = delete;
 
 		bool shouldClose() { return glfwWindowShouldClose(window); };
 
-		VkExtent2D getExtent() { 
-			return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) 
+		/** å½“å‰ framebuffer åƒç´ å°ºå¯¸ï¼Œä¾›äº¤æ¢é“¾ extent ä½¿ç”¨ */
+		VkExtent2D getExtent() {
+			return { static_cast<uint32_t>(width), static_cast<uint32_t>(height)
 			}; }
 
 		bool wasWindowResized() { return framebufferResized; }
 		void resetWindowResizedFlag() { framebufferResized = false; }
 		GLFWwindow* getGLFWwindow() const { return window; }
 
+		/** ç”± VkInstance åˆ›å»ºä¸æœ¬çª—å£å…³è”çš„ VkSurfaceKHRï¼ˆå‘ˆç°ç›®æ ‡ï¼‰ */
 		void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
 	private:
 		static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 		void initWindow();
+
 		int width;
 		int height;
-		bool framebufferResized = false;
-		
+		bool framebufferResized = false;  // ç½®ä½åç”± Renderer::endFrame è§¦å‘ recreateSwapChain
+
 		GLFWwindow* window;
 		std::string windowName;
 	};
 };
-
-/*
-LVEWindow(const LVEWindow&) = delete;
-LVEWindow& operator=(const LVEWindow&) = delete;
-
-ÕâÖÖĞ´·¨µÄºÃ´¦Ö÷ÒªÌåÏÖÔÚÒÔÏÂ¼¸¸ö·½Ãæ£º
-
-·ÀÖ¹ÒâÍâ¸´ÖÆ£ºÍ¨¹ıÉ¾³ı¸´ÖÆ¹¹Ôìº¯ÊıºÍ¸´ÖÆ¸³ÖµÔËËã·û£¬È·±£ LVEWindow ¶ÔÏó²»ÄÜ±»¸´ÖÆ¡£Õâ¶ÔÓÚ¹ÜÀí×ÊÔ´£¨Èç´°¿Ú¡¢Í¼ĞÎÉÏÏÂÎÄµÈ£©·Ç³£ÖØÒª£¬ÒòÎª¸´ÖÆ¿ÉÄÜ»áµ¼ÖÂ¶à¸ö¶ÔÏó³¢ÊÔ¹ÜÀíÍ¬Ò»×ÊÔ´£¬´Ó¶øÒı·¢×ÊÔ´³åÍ»»òÄÚ´æĞ¹Â©¡£
-
-×ÊÔ´¹ÜÀí£ºÔÚ×ÊÔ´»ñÈ¡¼´³õÊ¼»¯£¨RAII£©Ä£Ê½ÏÂ£¬×ÊÔ´ÔÚ¶ÔÏó´´½¨Ê±¾Í±»·ÖÅä£¬²¢ÔÚ¶ÔÏóÉúÃüÖÜÆÚ½áÊøÊ±×Ô¶¯ÊÍ·Å¡£É¾³ı¸´ÖÆ¹¹ÔìºÍ¸´ÖÆÔËËã·û¿ÉÒÔÈ·±£×ÊÔ´µÄÎ¨Ò»ÓµÓĞÈ¨£¬¼ò»¯×ÊÔ´¹ÜÀí¡£
-
-Ã÷È·¶ÔÏóµÄÊ¹ÓÃÒâÍ¼£ºÕâÖÖĞ´·¨ÇåÎúµØ±íÃ÷¸ÃÀàµÄÉè¼ÆÒâÍ¼ÊÇ×÷ÎªÒ»¸ö¶ÀÕ¼µÄ×ÊÔ´¹ÜÀíÀà£¬ÓÃ»§²»Ó¦³¢ÊÔ¸´ÖÆËü¡£Õâ¿ÉÒÔÌá¸ß´úÂëµÄ¿É¶ÁĞÔºÍ¿ÉÎ¬»¤ĞÔ¡£
-
-±ÜÃâÇ±ÔÚµÄ´íÎó£ºÈç¹û¸´ÖÆ¹¹Ôìº¯ÊıºÍ¸´ÖÆ¸³ÖµÔËËã·û´æÔÚ£¬¿ÉÄÜ»áµ¼ÖÂÒâÍâµÄĞĞÎª£¬±ÈÈçÔÚÒ»¸ö¶ÔÏó±»¸´ÖÆºó£¬Á½¸ö¶ÔÏó¶¼³¢ÊÔÊÍ·ÅÍ¬Ò»×ÊÔ´£¬Ôì³ÉÎ´¶¨ÒåĞĞÎª¡£É¾³ıÕâÁ½¸öº¯Êı¿ÉÒÔ±ÜÃâÕâÖÖ´íÎó¡£
-
-Ìá¸ßĞÔÄÜ£ºÔÚÄ³Ğ©Çé¿öÏÂ£¬¸´ÖÆ²Ù×÷¿ÉÄÜ»áÉæ¼°¶îÍâµÄÄÚ´æ·ÖÅäºÍ¹ÜÀí£¬É¾³ıÕâĞ©²Ù×÷¿ÉÒÔÌá¸ßĞÔÄÜ£¬ÓÈÆäÊÇÔÚĞèÒªÆµ·±´´½¨ºÍÏú»Ù¶ÔÏóµÄ³¡¾°ÖĞ¡£
-*/

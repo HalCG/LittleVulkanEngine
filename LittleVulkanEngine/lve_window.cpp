@@ -14,14 +14,12 @@ namespace lve {
 	void LVEWindow::initWindow() {
 		glfwInit();
 
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);//йгр╩╦ЖсцсзиХжц GLFW ╢╟©з╣длАй╬ё╛╠Мй╬╢╢╫╗р╩╦Ж╡╩сКхн╨н OpenGL ╩Р OpenGL ES иообндоЮ╧ьа╙╣д╢╟©з║ё
+		// Д╦█Е┬⌡Е╩╨ OpenGL Д╦┼Д╦▀Ф√┤О╪▄Д╩┘Х╕│Е▌÷Г■÷Г╙≈Е▐ёД╬⌡ Vulkan Д╫©Г■╗
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-		/*
-			nullptr: ╣зкд╦Ж╡нйЩйгсцсзж╦╤╗р╩╦Жожсп╣диообндё╗хГ╧Шсп╣д╩╟ё╘ё╛тзуБюОиХжцн╙ nullptr ╠Мй╬╡╩й╧сцожспиообнд║ё
-			nullptr: ╣знЕ╦Ж╡нйЩйгсцсзж╦╤╗р╩╦Ж╧╡оМ╣диообндё╛уБюОр╡иХжцн╙ nullptr║ё
-		*/
 		window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
+		// Ф┼┼ this Е╜≤Х©⌡ GLFWО╪▄Д╬⌡И²≥Ф─│Е⌡·Х╟┐Е▐√Е⌡· LVEWindow*
 		glfwSetWindowUserPointer(window, this);
 		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	}

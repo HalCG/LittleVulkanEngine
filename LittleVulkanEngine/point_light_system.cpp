@@ -5,7 +5,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
-#include <glm/gtc/matrix_transform.hpp> // °üº¬ rotate º¯Êı
+#include <glm/gtc/matrix_transform.hpp> // åŒ…å« rotate å‡½æ•°
 
 // std
 #include <array>
@@ -15,6 +15,7 @@
 
 namespace lve {
 
+	// ä¸ point_light.vert/frag çš„ push å—ä¸€è‡´ï¼›color.w ä¸ºå¼ºåº¦
 	struct PointLightPushConstants {
 		glm::vec4 position{};
 		glm::vec4 color{};
@@ -55,7 +56,7 @@ namespace lve {
 	void PointLightSystem::createPipeline(VkRenderPass renderPass) {
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
-		//ÉèÖÃäÖÈ¾Í¨µÀºÍ¹ÜµÀ²¼¾Ö£¬²¢Çå³ıÊôĞÔÃèÊöºÍ°ó¶¨ÃèÊö£¨¿ÉÄÜÊÇÎªÁË×Ô¶¨Òå£©¡£
+		// æ— é¡¶ç‚¹ç¼“å†²ï¼šæ¸…ç©º vertex inputï¼›å¼€ alpha æ··åˆç”»åŠé€æ˜ç¯å…‰çƒ
 		PipelineConfigInfo pipelineConfig{};
 		LVEPipeline::defaultPipelineConfigInfo(pipelineConfig);
 		LVEPipeline::enableAlphaBlending(pipelineConfig);
@@ -65,13 +66,13 @@ namespace lve {
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		lvePipeline = std::make_unique<LVEPipeline>(
 			lveDevice,
-			"E:/opengl/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/point_light.vert.spv",
-			"E:/opengl/HalCG/LittleVulkanEngine/LittleVulkanEngine/shaders/point_light.frag.spv",
+			"shaders/point_light.vert.spv",
+			"shaders/point_light.frag.spv",
 			pipelineConfig);
 	}
 
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
-		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, { 0.f, -1.f, 0.f });//ÒıÈëÖ¡Ê±¼ä£¬ÊµÏÖµã¹âÔ´¶¯Ì¬Ğı×ª£¨0.1f ¼õËÙ£©
+		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, { 0.f, -1.f, 0.f });//å¼•å…¥å¸§æ—¶é—´ï¼Œå®ç°ç‚¹å…‰æºåŠ¨æ€æ—‹è½¬ï¼ˆ0.1f å‡é€Ÿï¼‰
 		int lightIndex = 0;
 		for (auto& kv : frameInfo.gameObjects) {
 			auto& obj = kv.second;
@@ -79,10 +80,10 @@ namespace lve {
 
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
-			// ¸üĞÂ¹âÔ´Î»ÖÃ
+			// æ›´æ–°å…‰æºä½ç½®
 			obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
 
-			// ubo¸³Öµ
+			// uboèµ‹å€¼
 			ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
 			ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
 
@@ -91,48 +92,31 @@ namespace lve {
 		ubo.numLights = lightIndex;
 	}
 
-	//Ö´ĞĞäÖÈ¾²Ù×÷
 	void PointLightSystem::render(FrameInfo& frameInfo) {
-		// ÅÅĞò¹âÔ´
+		// åŠé€æ˜éœ€ç”±è¿œåˆ°è¿‘ç”»ï¼šæŒ‰ä¸ç›¸æœºè·ç¦»å¹³æ–¹æ’åºï¼Œå† reverse è¿­ä»£
 		std::map<float, LVEGameObject::id_t> sorted;
 		for (auto& kv : frameInfo.gameObjects) {
 			auto& obj = kv.second;
 			if (obj.pointLight == nullptr) continue;
-
-			// ¼ÆËã¾àÀë
 			auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
 			float disSquared = glm::dot(offset, offset);
 			sorted[disSquared] = obj.getId();
 		}
 
-		//°ó¶¨¹ÜµÀµ½ÃüÁî»º³åÇø¡£
 		lvePipeline->bind(frameInfo.commandBuffer);
-
-		//°ó¶¨ÃèÊö¼¯£¬È·±£×ÅÉ«Æ÷¿ÉÒÔ·ÃÎÊ±ØÒªµÄ×ÊÔ´¡£
 		vkCmdBindDescriptorSets(
 			frameInfo.commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			pipelineLayout,
-			0,
-			1,
-			&frameInfo.globalDescriptorSet,
-			0,
-			nullptr);
+			0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
-
-		//¸üĞÂÍÆËÍ³£Á¿ºó£¬draw£¬ÒòÎª¶à¸öµã¹âÔ´£¬Ã¿¸öµã¹âÔ´µÄÑÕÉ«¡¢Î»ÖÃ¡¢´óĞ¡¶¼Í¬
-		//for (auto& kv : frameInfo.gameObjects) {
-		//	auto& obj = kv.second;
-		//	if (obj.pointLight == nullptr) continue;
-		
-		// ÒÔÏà·´µÄË³Ğòµü´úÅÅĞòµÄµÆ
+		// æ—  VBï¼švertexCount=6 â†’ shader ç”¨ gl_VertexIndex å– OFFSETS[6] æ‹¼ä¸¤ä¸ªä¸‰è§’å½¢
 		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 			auto& obj = frameInfo.gameObjects.at(it->second);
 			PointLightPushConstants push{};
 			push.position = glm::vec4(obj.transform.translation, 1.f);
 			push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-			push.radius = obj.transform.scale.x;
+			push.radius = obj.transform.scale.x;  // makePointLight æŠŠåŠå¾„å­˜åœ¨ scale.x
 
 			vkCmdPushConstants(
 				frameInfo.commandBuffer,
@@ -141,103 +125,8 @@ namespace lve {
 				0,
 				sizeof(PointLightPushConstants),
 				&push);
-			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);  // vertexCount, instanceCount, firstVertex, firstInstance
 		}
 	}
 
 }  // namespace lve
-
-
-
-/*
-ÔÚ Vulkan ÖĞ£¬ÃèÊö·û¼¯£¨Descriptor Set£©ºÍ¹ÜµÀ²¼¾Ö£¨Pipeline Layout£©ÊÇÁ½¸öÖØÒªµÄ¸ÅÄî£¬ËüÃÇÔÚÍ¼ĞÎäÖÈ¾¹ı³ÌÖĞ¸÷×Ô³Ğµ£×Å²»Í¬µÄ½ÇÉ«¡£ÏÂÃæ½«¶ÔËüÃÇµÄ°ó¶¨¹¦ÄÜ¡¢ĞÎÊ½¼°ÓÅÁÓ½øĞĞ·ÖÎö¡£
-
-### ÃèÊö·û²¼¾Ö£¨Descriptor Set Layout£©
-
-#### ¹¦ÄÜ
-- ÃèÊö·û²¼¾Ö¶¨ÒåÁËÒ»¸öÃèÊö·û¼¯ÖĞ°üº¬µÄ×ÊÔ´ÀàĞÍºÍÊıÁ¿£¨ÈçÎÆÀí¡¢»º³åÇøµÈ£©¡£
-- ËüÎª×ÅÉ«Æ÷Ìá¹©ÁË·ÃÎÊ×ÊÔ´µÄ·½Ê½£¬ÃèÊö·û¼¯ÖĞµÄÃ¿¸öÃèÊö·û¶¼¶ÔÓ¦×Å×ÅÉ«Æ÷ÖĞ¶¨ÒåµÄ×ÊÔ´¡£
-
-#### ĞÎÊ½
-- ÃèÊö·û²¼¾ÖÊÇÍ¨¹ı `VkDescriptorSetLayoutCreateInfo` ½á¹¹Ìå´´½¨µÄ£¬¶¨ÒåÁËÃèÊö·ûµÄÊıÁ¿¡¢ÀàĞÍºÍ½×¶Î£¨Èç¶¥µã×ÅÉ«Æ÷¡¢Æ¬¶Î×ÅÉ«Æ÷µÈ£©¡£
-- ÃèÊö·û¼¯¿ÉÒÔÔÚ¶à¸ö¹ÜµÀÖ®¼ä¹²Ïí¡£
-
-#### ÓÅÁÓ
-- **ÓÅµã**£º
-  - Áé»îĞÔ¸ß£º¿ÉÒÔÔÚ²»Í¬µÄäÖÈ¾Í¨µÀÖĞÊ¹ÓÃÏàÍ¬µÄÃèÊö·û²¼¾Ö¡£
-  - ×ÊÔ´¸´ÓÃ£º¶à¸ö¹ÜµÀ¿ÉÒÔÊ¹ÓÃÏàÍ¬µÄÃèÊö·û¼¯£¬¼õÉÙÄÚ´æÊ¹ÓÃ¡£
-- **È±µã**£º
-  - ÃèÊö·û¼¯µÄ¸üĞÂ¿ÉÄÜ»áÓ°ÏìĞÔÄÜ£¬ÌØ±ğÊÇÔÚÆµ·±ÇĞ»»ÃèÊö·û¼¯Ê±¡£
-
-### ¹ÜµÀ²¼¾Ö£¨Pipeline Layout£©
-
-#### ¹¦ÄÜ
-- ¹ÜµÀ²¼¾ÖÊÇÒ»¸ö¸ü¸ß²ã´ÎµÄ¸ÅÄî£¬Ëü¶¨ÒåÁËÒ»¸ö¹ÜµÀµÄÕûÌå½á¹¹£¬°üÀ¨°ó¶¨µÄÃèÊö·û¼¯ºÍÍÆËÍ³£Á¿·¶Î§¡£
-- ¹ÜµÀ²¼¾Ö½«ÃèÊö·û¼¯Óë¹ÜµÀ¹ØÁª£¬Ê¹µÃÔÚäÖÈ¾¹ı³ÌÖĞ¿ÉÒÔÊ¹ÓÃÕâĞ©×ÊÔ´¡£
-
-#### ĞÎÊ½
-- ¹ÜµÀ²¼¾ÖÍ¨¹ı `VkPipelineLayoutCreateInfo` ½á¹¹Ìå´´½¨£¬°üº¬ÁËÃèÊö·û²¼¾ÖµÄÊıÁ¿¡¢Ö¸ÕëºÍÍÆËÍ³£Á¿·¶Î§µÄĞÅÏ¢¡£
-- ¹ÜµÀ²¼¾ÖÍ¨³£ÔÚ¹ÜµÀ´´½¨Ê±Ö¸¶¨£¬ÇÒÔÚ¹ÜµÀµÄÕû¸öÉúÃüÖÜÆÚÄÚ±£³Ö²»±ä¡£
-
-#### ÓÅÁÓ
-- **ÓÅµã**£º
-  - ¹ÜµÀ²¼¾ÖÌá¹©ÁËÒ»¸öÍ³Ò»µÄ½Ó¿Ú£¬¼ò»¯ÁËäÖÈ¾¹ı³ÌÖĞµÄ×ÊÔ´¹ÜÀí¡£
-  - ¿ÉÒÔÍ¨¹ıÍÆËÍ³£Á¿¿ìËÙ´«µİĞ¡Á¿Êı¾İ£¬¼õÉÙÁË¶ÔÃèÊö·û¼¯µÄÒÀÀµ¡£
-- **È±µã**£º
-  - Ò»µ©´´½¨£¬¹ÜµÀ²¼¾ÖµÄ½á¹¹£¨Èç°ó¶¨µÄÃèÊö·û¼¯£©¾ÍÎŞ·¨¸ü¸Ä£¬Òò´ËÔÚÉè¼ÆÊ±ĞèÒª¿¼ÂÇÖÜÈ«¡£
-  - Ã¿´Î´´½¨ĞÂµÄ¹ÜµÀÊ±¶¼ĞèÒªÖØĞÂÖ¸¶¨¹ÜµÀ²¼¾Ö£¬¿ÉÄÜµ¼ÖÂĞÔÄÜ¿ªÏú¡£
-
-### ĞÎÊ½ÓëÓÅÁÓ·ÖÎö×Ü½á
-
-1. **ĞÎÊ½**£º
-   - ÃèÊö·û²¼¾ÖÖ÷Òª¹Ø×¢ÃèÊö·ûµÄÀàĞÍºÍÊıÁ¿£¬Ìá¹©ÁË×ÊÔ´·ÃÎÊµÄ½á¹¹¡£
-   - ¹ÜµÀ²¼¾ÖÔòÊÇ½«ÃèÊö·û²¼¾ÖÓë¹ÜµÀ½áºÏ£¬ĞÎ³ÉÒ»¸öÍêÕûµÄäÖÈ¾¹ÜµÀ¡£
-
-2. **ÓÅÁÓ**£º
-   - ÃèÊö·û²¼¾ÖµÄÁé»îĞÔºÍ×ÊÔ´¸´ÓÃÊ¹ÆäÊÊÓÃÓÚ¶àÖÖ¹ÜµÀ£¬µ«ÔÚÆµ·±¸üĞÂÊ±¿ÉÄÜÓ°ÏìĞÔÄÜ¡£
-   - ¹ÜµÀ²¼¾ÖÌá¹©ÁË¸ü¸ß²ã´ÎµÄ½á¹¹»¯¹ÜÀí£¬¼ò»¯ÁË×ÊÔ´°ó¶¨¹ı³Ì£¬µ«ÔÚ´´½¨Ê±ĞèÒª½÷É÷Éè¼Æ£¬ÇÒ²»Ö§³Ö¶¯Ì¬ĞŞ¸Ä¡£
-
-### ½áÂÛ
-ÃèÊö·û²¼¾ÖºÍ¹ÜµÀ²¼¾ÖÔÚ Vulkan ÖĞ¸÷ÓĞÆäÖØÒªĞÔ£¬ËüÃÇµÄÉè¼ÆºÍÊ¹ÓÃĞèÒª¸ù¾İ¾ßÌåµÄäÖÈ¾ĞèÇó½øĞĞÈ¨ºâ¡£ÃèÊö·û²¼¾ÖÌá¹©ÁËÁé»îµÄ×ÊÔ´¹ÜÀí£¬¶ø¹ÜµÀ²¼¾ÖÔòÈ·±£ÁË¹ÜµÀµÄ¸ßĞ§ÔËĞĞºÍ×ÊÔ´µÄÓĞĞ§ÀûÓÃ¡£
-
-
-ÔÚ Vulkan ÖĞ£¬²»¿ÉÒÔÖ±½ÓÔÚ¹ÜµÀÖĞ°ó¶¨ÃèÊö·û¼¯£¬¶øÊÇ±ØĞëÍ¨¹ı¹ÜµÀ²¼¾ÖÀ´¶¨ÒåºÍ¹ÜÀíÃèÊö·û¼¯µÄ°ó¶¨¡£ÕâÊÇ Vulkan API µÄÉè¼Æ¾ö²ß£¬ÒÔÌá¹©¸ü¸ßµÄÁé»îĞÔºÍĞÔÄÜ¡£ÏÂÃæÏêÏ¸½âÊÍÔ­Òò¼°Ïà¹Ø¸ÅÄî¡£
-
-### 1. Vulkan µÄÉè¼ÆÔ­Ôò
-
-Vulkan µÄÉè¼ÆÖ¼ÔÚÌá¹©¸ü¸ßµÄ¿ØÖÆÈ¨ºÍĞÔÄÜ£¬Í¨¹ıÏÔÊ½µÄ×´Ì¬¹ÜÀíÈÃ¿ª·¢ÕßÄÜ¹»ÍêÈ«ÕÆÎÕÍ¼ĞÎäÖÈ¾µÄ¹ı³Ì¡£ÕâÒâÎ¶×ÅĞí¶à²Ù×÷ĞèÒªÔÚ¹ÜµÀ´´½¨Ö®Ç°Íê³É£¬ÒÔÈ·±£¹ÜµÀÔÚÔËĞĞÊ±µÄĞ§ÂÊ¡£
-
-### 2. ¹ÜµÀ²¼¾ÖÓëÃèÊö·û¼¯µÄ¹ØÏµ
-
-- **¹ÜµÀ²¼¾Ö**£º
-  - ¹ÜµÀ²¼¾ÖÔÚ Vulkan ÖĞÓÃÓÚ¶¨ÒåÒ»×éÓë¹ÜµÀ¹ØÁªµÄÃèÊö·û¼¯²¼¾Ö£¬ÒÔ¼°¿ÉÑ¡µÄÍÆËÍ³£Á¿·¶Î§¡£
-  - ÔÚ´´½¨¹ÜµÀÊ±£¬±ØĞëÖ¸¶¨¹ÜµÀ²¼¾Ö£¬ÕâÑù Vulkan ¿ÉÒÔÔÚ¹ÜµÀÖ´ĞĞÆÚ¼äÖªµÀÈçºÎ·ÃÎÊÏàÓ¦µÄÃèÊö·û¼¯¡£
-
-- **ÃèÊö·û¼¯**£º
-  - ÃèÊö·û¼¯ÊÇ¾ßÌåµÄ×ÊÔ´ÊµÀı£¬´æ´¢ÁË¶à¸öÃèÊö·û£¨ÈçÎÆÀí¡¢»º³åÇøµÈ£©ÒÔ¼°ËüÃÇÔÚ GPU ÉÏµÄ°ó¶¨ĞÅÏ¢¡£
-  - ÃèÊö·û¼¯±¾ÉíÊÇ¶ÀÁ¢ÓÚ¹ÜµÀµÄ£¬µ«Æä±ØĞëÓë¹ÜµÀ²¼¾ÖÒ»ÆğÊ¹ÓÃ¡£
-
-### 3. ²»ÄÜÖ±½ÓÔÚ¹ÜµÀÖĞ°ó¶¨ÃèÊö·û¼¯µÄÔ­Òò
-
-- **Ğ§ÂÊ¿¼ÂÇ**£ºÔÚ¹ÜµÀ´´½¨Ê±£¬Vulkan »áÎª¸Ã¹ÜµÀµÄ×´Ì¬½øĞĞÓÅ»¯¡£Õâ°üÀ¨¶ÔÃèÊö·û¼¯µÄÓ³ÉäºÍ·ÃÎÊ·½Ê½¡£½«ÃèÊö·û¼¯°ó¶¨µÄ²Ù×÷·ÅÔÚ¹ÜµÀ²¼¾ÖÖĞ£¬¿ÉÒÔ±ÜÃâÔÚÃ¿´ÎäÖÈ¾Ê±¶¼ÖØ¸´ÉèÖÃ×´Ì¬£¬Ìá¸ßĞÔÄÜ¡£
-
-- **Éè¼ÆÒ»ÖÂĞÔ**£ºVulkan µÄÉè¼ÆÀíÄîÊÇÏÔÊ½¿ØÖÆ£¬Ê¹ÓÃ¹ÜµÀ²¼¾ÖÎª¸÷ÖÖÍ¼ĞÎ²Ù×÷Ìá¹©ÁËÒ»ÖÖÒ»ÖÂµÄ·½Ê½À´¹ÜÀí×ÊÔ´¡£Èç¹ûÔÊĞíÖ±½ÓÔÚ¹ÜµÀÖĞ°ó¶¨ÃèÊö·û£¬¿ÉÄÜ»áµ¼ÖÂ¿ª·¢ÕßÔÚ¸÷ÖÖ¹ÜµÀÖ®¼äÆµ·±±ä»¯°ó¶¨µÄ×ÊÔ´£¬½µµÍ´úÂëµÄ¿É¶ÁĞÔºÍÒ»ÖÂĞÔ¡£
-
-- **ÍÆËÍ³£Á¿Ö§³Ö**£º¹ÜµÀ²¼¾Ö²»½ö¶¨ÒåÁËÃèÊö·û¼¯£¬»¹ÔÊĞí¶¨ÒåÍÆËÍ³£Á¿·¶Î§¡£ÕâÎª½ô¼±´«ÊäĞ¡Á¿Êı¾İµ½×ÅÉ«Æ÷Ìá¹©ÁËÒ»ÖÖÁé»îµÄ»úÖÆ£¬Ö±½ÓÔÚ¹ÜµÀÖĞ²Ù×÷ÃèÊö·û¼¯½«ÎŞ·¨ÀûÓÃÕâÒ»ÌØĞÔ¡£
-
-### 4. °ó¶¨µÄ»ù±¾¹ı³Ì
-
-ÔÚ Vulkan ÖĞ£¬ÃèÊö·û¼¯µÄ°ó¶¨Í¨³£Éæ¼°ÒÔÏÂ¼¸¸ö²½Öè£º
-
-1. **´´½¨ÃèÊö·û¼¯²¼¾Ö**£º¶¨Òå×ÊÔ´µÄÀàĞÍºÍÊıÁ¿¡£
-2. **·ÖÅäÃèÊö·û¼¯**£ºÎªÌØ¶¨µÄÊµÀı·ÖÅäÃèÊö·û¼¯¡£
-3. **¸üĞÂÃèÊö·û¼¯**£º½«Êµ¼Ê×ÊÔ´£¨ÀıÈçÎÆÀí¡¢»º³åÇø£©¸üĞÂµ½ÃèÊö·û¼¯ÖĞ¡£
-4. **´´½¨¹ÜµÀ²¼¾Ö**£º½«ÃèÊö·û¼¯²¼¾ÖÓë¹ÜµÀ½øĞĞ¹ØÁª¡£
-5. **´´½¨¹ÜµÀ**£ºÊ¹ÓÃ¹ÜµÀ²¼¾ÖºÍÆäËûÏà¹Ø×´Ì¬´´½¨Í¼ĞÎ¹ÜµÀ¡£
-6. **ÔÚÃüÁî»º³åÇøÖĞ°ó¶¨ÃèÊö·û¼¯**£ºÔÚ»æÖÆµ÷ÓÃÖ®Ç°£¬Í¨¹ıÃüÁî»º³åÇø½«ÃèÊö·û¼¯°ó¶¨µ½µ±Ç°µÄ¹ÜµÀÉÏ¡£
-
-### ½áÂÛ
-
-Òò´Ë£¬ÔÚ Vulkan ÖĞ£¬ÃèÊö·û¼¯²»ÄÜÖ±½ÓÔÚ¹ÜµÀÖĞ°ó¶¨£¬¶øÊÇ±ØĞëÍ¨¹ı¹ÜµÀ²¼¾Ö½øĞĞ¹ÜÀí¡£ÕâÖÖÉè¼Æ·½Ê½Ê¹ Vulkan ¸ü¼Ó¸ßĞ§ºÍÁé»î£¬Í¬Ê±Ò²ÔöÇ¿ÁË¶Ô GPU ×ÊÔ´µÄ¿ØÖÆÓë¹ÜÀí¡£Èç¹ûĞèÒª¸ü¸Ä°ó¶¨µÄ×ÊÔ´£¬Ö»Ğè¸üĞÂÃèÊö·û¼¯£¬È»ºóÔÚÃüÁî»º³åÇøÖĞ½«Æä°ó¶¨µ½¹ÜµÀÉÏ¼´¿É¡£
-
-*/

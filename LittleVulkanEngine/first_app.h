@@ -11,6 +11,13 @@
 #include <vector>
 
 namespace lve {
+	/**
+	 * 应用入口类：组装窗口/设备/渲染器、描述符池、场景对象，并驱动主循环。
+	 *
+	 * 成员声明顺序很重要（析构逆序）：
+	 * Window → Device → Renderer → globalPool → gameObjects
+	 * 保证 Renderer/Device 仍可用时再销毁依赖它们的池与 GPU 资源。
+	 */
 	class FirstApp {
 	public:
 		static constexpr int WIDTH = 800;
@@ -32,7 +39,7 @@ namespace lve {
 		lve::LVEDevice lveDevice{ lveWindow };
 		LVERenderer lveRenderer{lveWindow, lveDevice};
 
-		// ע�⣺������˳�����Ҫ
+		// 注意：声明顺序决定析构顺序；pool 必须在 device 之前析构完成相关集
 		std::unique_ptr<LVEDescriptorPool> globalPool{};
 		LVEGameObject::Map gameObjects;
 	};
