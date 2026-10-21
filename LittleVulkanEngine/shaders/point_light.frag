@@ -1,6 +1,8 @@
 #version 450
 
-layout (location = 0) in vec2 fragOffset;//Õâ¸öÊäÈë±äÁ¿´Ó¶¥µã×ÅÉ«Æ÷´«µÝ¹ýÀ´£¬±íÊ¾µ±Ç°Æ¬¶ÎÏà¶ÔÓÚ¹âÔ´Î»ÖÃµÄÆ«ÒÆÁ¿£¬ÀàÐÍÎª vec2¡£
+// ç‚¹å…‰åœ†ç›˜ï¼šæŒ‰ fragOffset è·ç¦» discard æˆåœ†ï¼Œå¹¶ç”¨ alpha åšæŸ”è¾¹ï¼ˆéœ€ç®¡çº¿ alpha blendï¼‰
+
+layout (location = 0) in vec2 fragOffset;
 layout (location = 0) out vec4 outColor;
 
 struct PointLight {
@@ -26,34 +28,14 @@ layout(push_constant) uniform Push {
 const float M_PI = 3.1415926538;
 
 void main() {
-    //¼ÆËã´Óµ±Ç°Æ¬¶Îµ½¹âÔ´µÄ¾àÀë¡£Ê¹ÓÃ dot(fragOffset, fragOffset) µÃµ½ fragOffset µÄÆ½·½£¬ÔÙÍ¨¹ý sqrt È¡Æ½·½¸ù£¬µÃµ½Êµ¼Ê¾àÀë¡£
     float dis = sqrt(dot(fragOffset, fragOffset));
 
-    //¶¨Òå¹âÔ´µÄÓÐÐ§·¶Î§£¬¾àÀë¹âÔ´³¬¹ý 1.0 µÄ²¿·Ö²»±»äÖÈ¾£¬°ÑÕý·½ÐÎ¹âÔ´±äÎªÔ²ÐÎ
+    // å•ä½åœ†å¤–ä¸¢å¼ƒï¼ŒæŠŠæ­£æ–¹å½¢ billboard è£æˆåœ†
     if (dis >= 1.0) {
         discard;
     }
-    
-    float cosDis = 0.5 * (cos(dis * M_PI) + 1.0); // ranges from 1 -> 0
+
+    // cos è¡°å‡ï¼šä¸­å¿ƒ 1 â†’ è¾¹ç¼˜ 0ï¼Œç”¨ä½œäº®åº¦ä¸Ž alpha
+    float cosDis = 0.5 * (cos(dis * M_PI) + 1.0);
     outColor = vec4(push.color.xyz + 0.5 * cosDis, cosDis);
 }
-
-
-/*
-### 1. ÑÕÉ«²åÖµ
-```glsl
-float cosDis = 0.5 * (cos(dis * M_PI) + 1.0); // ranges from 1 -> 0
-```
-- **`cos(dis * M_PI)`**£º¼ÆËãµ±Ç°¾àÀë `dis` µÄÓàÏÒÖµ£¬³ËÒÔ \( \pi \) Ê¹µÃµ± `dis` Îª 0 Ê±£¬ÓàÏÒµÄÖµÎª 1£¬¶øµ± `dis` Îª 1 Ê±£¬ÓàÏÒµÄÖµÎª -1¡£
-- **ÕûÌå±í´ïÊ½**£º½«ÓàÏÒÖµÆ½ÒÆºÍËõ·Å£¬Ê¹Æä·¶Î§´Ó 1£¨µ± `dis=0`£©µ½ 0£¨µ± `dis=1`£©£¬¼´ÊµÏÖÁËÒ»¸ö´ÓÂúÇ¿¶Èµ½ÎÞÇ¿¶È½¥±äµÄÐ§¹û¡£
-
-### 2. Êä³öÑÕÉ«
-```glsl
-outColor = vec4(push.color.xyz + 0.5 * cosDis, cosDis);
-```
-- **`push.color.xyz`**£º±íÊ¾´«ÈëµÄÑÕÉ«£¬Ö»ÓÐ RGB ·ÖÁ¿¡£
-- **`0.5 * cosDis`**£º½«¼ÆËãµÃµ½µÄ½¥±äÖµ `cosDis` ³ËÒÔ 0.5£¬ÕâÑù¿ÉÒÔ½«ÑÕÉ«µÄÇ¿¶Èµ÷ÕûÎªÒ»¸öÐÂµÄ·¶Î§¡£
-- **`outColor`**£ºÉú³ÉÒ»¸öËÄÎ¬ÏòÁ¿£¨RGBA£©£¬ÆäÖÐ£º
-  - RGB ·ÖÁ¿ÊÇÔ­Ê¼ÑÕÉ«ºÍ½¥±äÇ¿¶ÈµÄ×éºÏ¡£
-  - A ·ÖÁ¿£¨alpha£©ÓÉ `cosDis` ¾ö¶¨£¬ÓÃÓÚ¿ØÖÆ¸ÃÆ¬¶ÎµÄÍ¸Ã÷¶È¡£`cosDis` Ô½½Ó½ü 0£¬±íÊ¾Ô½Í¸Ã÷£»Ô½½Ó½ü 1£¬±íÊ¾Ô½²»Í¸Ã÷¡£
-*/

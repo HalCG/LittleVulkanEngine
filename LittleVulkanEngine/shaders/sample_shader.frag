@@ -1,5 +1,7 @@
 #version 450
 
+// ç½‘æ ¼ç‰©ä½“ç‰‡æ®µç€è‰²å™¨ï¼šç¯å¢ƒå…‰ + å¤šç‚¹å…‰æ¼«åå°„ + Blinn-Phong é•œé¢
+
 layout (location = 0) in vec3 fragColor;
 layout (location = 1) in vec3 fragPosWorld;
 layout (location = 2) in vec3 fragNormalWorld;
@@ -8,131 +10,50 @@ layout (location = 0) out vec4 outColor;
 
 struct PointLight {
   vec4 position; // ignore w
-  vec4 color; // w ÊÇÇ¿¶È
+  vec4 color; // w æ˜¯å¼ºåº¦
 };
 
 layout(set = 0, binding = 0) uniform GlobalUbo {
   mat4 projection;
   mat4 view;
   mat4 invView;
-  vec4 ambientLightColor; // w ÊÇÇ¿¶È
+  vec4 ambientLightColor; // w æ˜¯å¼ºåº¦
   PointLight pointLights[10];
   int numLights;
 } ubo;
 
-layout(push_constant) uniform PushConstantData{//Ã¿¸ö×ÅÉ«Æ÷Èë¿ÚµãÖ»ÄÜÊ¹ÓÃÒ»¸ö³£Á¿ÍÆËÍ¿é
+layout(push_constant) uniform PushConstantData {
 	mat4 modelMatrix;
 	mat4 normalMatrix;
-}pushConstantData;
-
+} pushConstantData;
 
 void main(){
-/*
-  vec3 directionToLight = ubo.lightPosition - fragPosWorld;
-  float attenuation = 1.0 / dot(directionToLight, directionToLight); // distance squared
-  vec3 lightColor = ubo.lightColor.xyz * ubo.lightColor.w * attenuation;
-  vec3 ambientLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
-  vec3 diffuseLight = lightColor * max(dot(normalize(fragNormalWorld), normalize(directionToLight)), 0);
-  outColor = vec4((diffuseLight + ambientLight) * fragColor, 1.0);
-*/
   vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
-  vec3 specularLight = vec3(0.0);                                       //³õÊ¼»¯Ò»¸ö¾µÃæ¹âµÄ±äÁ¿£¬ÓÃÓÚÀÛ¼ÓËùÓĞ¹âÔ´µÄ¾µÃæ·´Éä¹âµÄ¹±Ï×¡£
+  vec3 specularLight = vec3(0.0);
   vec3 surfaceNormal = normalize(fragNormalWorld);
 
-  vec3 cameraPosWorld = ubo.invView[3].xyz;                             //Í¨¹ıÏà»úµÄÄæ£¬È¡µ½Ïà»úÏà¶ÔÊÀ½ç×À±êµÄÆ½ÒÆ£¬µÃµ½Ïà»úÊÀ½ç×ø±ê
+  // invView ç¬¬ 4 åˆ— xyz = ç›¸æœºä¸–ç•Œåæ ‡
+  vec3 cameraPosWorld = ubo.invView[3].xyz;
   vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
   for (int i = 0; i < ubo.numLights; i++) {
     PointLight light = ubo.pointLights[i];
     vec3 directionToLight = light.position.xyz - fragPosWorld;
-    float attenuation = 1.0 / dot(directionToLight, directionToLight);  // distance squared ¼ÆËãË¥¼õÏµÊı
+    float attenuation = 1.0 / dot(directionToLight, directionToLight);  // 1/d^2
     directionToLight = normalize(directionToLight);
 
     float cosAngIncidence = max(dot(surfaceNormal, directionToLight), 0);
-    vec3 intensity = light.color.xyz * light.color.w * attenuation;     //¼ÆËãµ±Ç°¹âÔ´µÄÇ¿¶È£¬½«ÆäÑÕÉ«ºÍÇ¿¶ÈÏà³Ë£¬²¢³ËÉÏË¥¼õÖµ£¬µÃµ½×îÖÕµÄ¹âÔ´Ç¿¶È¡£
+    vec3 intensity = light.color.xyz * light.color.w * attenuation;
 
-    //Âş·´Éä
     diffuseLight += intensity * cosAngIncidence;
 
-    // ¾µÃæ¹â
+    // Blinn-Phongï¼šæŒ‡æ•°è¶Šå¤§é«˜å…‰è¶Šé”
     vec3 halfAngle = normalize(directionToLight + viewDirection);
     float blinnTerm = dot(surfaceNormal, halfAngle);
     blinnTerm = clamp(blinnTerm, 0, 1);
-    blinnTerm = pow(blinnTerm, 512.0); // higher values -> sharper highlight
+    blinnTerm = pow(blinnTerm, 512.0);
     specularLight += intensity * blinnTerm;
   }
 
   outColor = vec4(diffuseLight * fragColor + specularLight * fragColor, 1.0);
 }
-
-/*
-¼ÆËã¹âÕÕĞ§¹û£¬°üÀ¨»·¾³¹â¡¢Âş·´Éä¹âºÍ¾µÃæ·´Éä¹âÔÚÒ»¸ö³¡¾°ÖĞµÄÓ°Ïì¡£ÎÒÃÇÖğĞĞ½âÎöÕâ¶Î´úÂë£º
-
-```glsl
-vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
-```
-ÕâĞĞ´úÂëÊ×ÏÈ¼ÆËã»·¾³¹â£¨ambient light£©£¬`ubo.ambientLightColor` ÊÇÒ»¸ö°üº¬»·¾³¹âÑÕÉ«ºÍÇ¿¶ÈµÄÏòÁ¿¡£`.xyz` ÌáÈ¡ÑÕÉ«²¿·Ö£¬¶ø `.w` Í¨³£±íÊ¾Ç¿¶È£¬Òò´Ë½«»·¾³¹âµÄÑÕÉ«ÓëÇ¿¶ÈÏà³ËµÃµ½»·¾³¹âµÄ¹±Ï×¡£
-
-```glsl
-vec3 specularLight = vec3(0.0);
-```
-ÕâĞĞ´úÂë³õÊ¼»¯Ò»¸ö¾µÃæ¹âµÄ±äÁ¿£¬ÓÃÓÚÀÛ¼ÓËùÓĞ¹âÔ´µÄ¾µÃæ·´Éä¹âµÄ¹±Ï×¡£
-
-```glsl
-vec3 surfaceNormal = normalize(fragNormalWorld);
-```
-ÕâĞĞ´úÂë½«Æ¬¶ÎµÄ·¨ÏßÏòÁ¿ `fragNormalWorld` ½øĞĞ¹éÒ»»¯£¬ÒÔÈ·±£ËüµÄ³¤¶ÈÎª 1¡£·¨ÏßÓÃÓÚ¼ÆËã¹âÕÕÓë±íÃæÖ®¼äµÄ¹ØÏµ¡£
-
-```glsl
-vec3 cameraPosWorld = ubo.invView[3].xyz;
-vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
-```
-ÕâÀïÊ×ÏÈ»ñÈ¡ÊÀ½ç¿Õ¼äÖĞµÄÉãÏñ»úÎ»ÖÃ£¨`cameraPosWorld`£©£¬È»ºó¼ÆËã´Óµ±Ç°Æ¬¶ÎÎ»ÖÃµ½ÉãÏñ»úµÄÊÓÏß·½Ïò£¨`viewDirection`£©£¬²¢½øĞĞ¹éÒ»»¯¡£
-
-```glsl
-for (int i = 0; i < ubo.numLights; i++) {
-    PointLight light = ubo.pointLights[i];
-    vec3 directionToLight = light.position.xyz - fragPosWorld;
-    float attenuation = 1.0 / dot(directionToLight, directionToLight); // distance squared
-    directionToLight = normalize(directionToLight);
-```
-Õâ¶Î´úÂëÊÇÒ»¸öÑ­»·£¬±éÀúËùÓĞµÄµã¹âÔ´ `PointLight`¡£Í¨¹ı `light.position` »ñÈ¡¹âÔ´µÄÎ»ÖÃ£¬²¢¼ÆËã¹âÔ´µ½µ±Ç°Æ¬¶ÎÎ»ÖÃµÄ·½Ïò `directionToLight`¡£È»ºóÍ¨¹ı¼ÆËã`directionToLight`ÏòÁ¿µÄÆ½·½³¤¶ÈÀ´¼ÆËãË¥¼õÏµÊı£¬ÕâÀïÊ¹ÓÃµÄÊÇ¼òµ¥µÄÆ½·½·´±ÈË¥¼õ `1 / (distance ^ 2)`¡£×îºó£¬¶Ô¸Ã·½ÏòÏòÁ¿½øĞĞ¹éÒ»»¯¡£
-
-```glsl
-    float cosAngIncidence = max(dot(surfaceNormal, directionToLight), 0);
-```
-ÕâÒ»ĞĞ´úÂë¼ÆËã¹âÏßÓë±íÃæ·¨ÏßÖ®¼äµÄ¼Ğ½ÇµÄÓàÏÒÖµ£¨¼´ÈëÉä½Ç£©£¬Ê¹ÓÃ `dot` º¯Êı½øĞĞ¼ÆËã£¬²¢Ê¹ÓÃ `max` À´È·±£¸ÃÖµ²»Ğ¡ÓÚ 0¡£
-
-```glsl
-    vec3 intensity = light.color.xyz * light.color.w * attenuation;
-```
-ÕâĞĞ´úÂë¼ÆËãµ±Ç°¹âÔ´µÄÇ¿¶È£¬½«ÆäÑÕÉ«ºÍÇ¿¶ÈÏà³Ë£¬²¢³ËÉÏË¥¼õÖµ£¬µÃµ½×îÖÕµÄ¹âÔ´Ç¿¶È¡£
-
-```glsl
-    //Âş·´Éä
-    diffuseLight += intensity * cosAngIncidence;
-```
-ÕâÀï¼ÆËãÂş·´Éä¹âµÄ¹±Ï×£¬½«Ç¿¶È³ËÒÔÈëÉä½ÇµÄÓàÏÒÖµ£¬È»ºó¼Óµ½ `diffuseLight` ÖĞ¡£
-
-```glsl
-    // ¾µÃæ¹â
-    vec3 halfAngle = normalize(directionToLight + viewDirection);
-```
-ÕâĞĞ¼ÆËã°ë½ÇÊ¸Á¿£¨half-angle vector£©£¬ËüÊÇ¹âÏß·½ÏòºÍÊÓÏß·½ÏòµÄºÍµÄ¹éÒ»»¯Öµ¡£°ë½ÇÊ¸Á¿ÔÚ¼ÆËã¾µÃæ·´Éä¹âÊ±ºÜÖØÒª¡£
-
-```glsl
-    float blinnTerm = dot(surfaceNormal, halfAngle);
-    blinnTerm = clamp(blinnTerm, 0, 1);
-    blinnTerm = pow(blinnTerm, 512.0); // higher values -> sharper highlight
-```
-ÕâÀïÊ×ÏÈ¼ÆËã·¨ÏßºÍ°ë½ÇÏòÁ¿Ö®¼äµÄµã»ı£¬µÃµ½Ò»¸öÖµ `blinnTerm`£¬Õâ¸öÖµÓÃÓÚÃèÊö¾µÃæ·´Éä¡£Í¨¹ı `clamp` ÏŞÖÆÔÚ 0 µ½ 1 Ö®¼ä£¬½Ó×Å½«ËüÌáÉıµ½ 512 ´Î·½£¬ÒÔÊ¹¸ß¹â¸ü¼âÈñ¡£
-
-```glsl
-    specularLight += intensity * blinnTerm;
-}
-```
-×îºó£¬½«¾µÃæ·´ÉäµÄ¼ÆËã½á¹û³ËÒÔµ±Ç°¹âÔ´µÄÇ¿¶È²¢ÀÛ¼Óµ½ `specularLight` ÖĞ¡£
-
-×ÛÉÏËùÊö£¬Õâ¶Î´úÂë×ÛºÏ¿¼ÂÇÁË»·¾³¹â¡¢Âş·´ÉäºÍ¾µÃæ·´ÉäµÄ¹âÕÕĞ§¹û£¬ÄÜ¹»ÓĞĞ§µØäÖÈ¾3D³¡¾°ÖĞµÄ¹âÕÕ¡£ÕâÖÖÉèÖÃÊ¹µÃ¼´Ê¹ÔÚÓĞ¶à¸ö¹âÔ´µÄÇé¿öÏÂ£¬Ò²ÄÜ±£Ö¤¹âÕÕĞ§¹ûµÄ×¼È·ĞÔºÍÕæÊµ¸Ğ¡£ Èç¹û¶Ô´úÂëµÄÄ³¸ö²¿·ÖĞèÒª½øÒ»²½µÄ½âÊÍ»òÕßÆäËû·½ÃæµÄÒÉÎÊ£¬Çë¸æËßÎÒ£¡
-
-*/
