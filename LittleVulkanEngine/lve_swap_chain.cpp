@@ -20,7 +20,7 @@ namespace lve {
 		: device{ deviceRef }, windowExtent{ extent }, oldSwapChain{ previous } {
 		init();
 
-		// ÇåÀí¾É½»»»Á´£¬Èç¹û²»ÔÚÊ¹ÓÃ
+		// æ–°é“¾å·²åˆ›å»ºå®Œæ¯•ï¼Œé‡Šæ”¾å¯¹æ—§é“¾çš„ shared_ptrï¼ˆæ—§èµ„æºåœ¨æ­¤æ—¶é”€æ¯ï¼‰
 		oldSwapChain = nullptr;
 	}
 
@@ -57,15 +57,18 @@ namespace lve {
 		vkDestroyRenderPass(device.device(), renderPass, nullptr);
 
 		// cleanup synchronization objects
+		for (auto semaphore : renderFinishedSemaphores) {
+			vkDestroySemaphore(device.device(), semaphore, nullptr);
+		}
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroySemaphore(device.device(), renderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
 			vkDestroyFence(device.device(), inFlightFences[i], nullptr);
 		}
 	}
 
-	//¸Ã·½·¨ÓÃÓÚ»ñÈ¡ÏÂÒ»¸ö¿ÉÓÃµÄÍ¼Æ¬Ë÷Òı£¬µÈ´ıµ±Ç°Ö¡Íê³É²¢·µ»ØÏÂÒ»¸ö¿ÉÓÃÍ¼Æ¬Ë÷Òı¡£ÄÚ²¿ÊµÏÖÍ¨¹ıĞÅºÅÁ¿±£Ö¤Í¬²½ĞÔ¡£
+	// å–å¾—ä¸‹ä¸€å¼ å¯ç”»çš„ swap image ä¸‹æ ‡ï¼›CPU å…ˆç­‰æœ¬å¸§æ§½ä¸Šä¸€è½® GPU åšå®Œ
 	VkResult LVESwapChain::acquireNextImage(uint32_t* imageIndex) {
+		// fenceï¼šCPUâ†”GPUã€‚VK_TRUE=ç­‰å…¨éƒ¨ï¼›timeout=max è¡¨ç¤ºä¸€ç›´ç­‰
 		vkWaitForFences(
 			device.device(),
 			1,
@@ -73,62 +76,64 @@ namespace lve {
 			VK_TRUE,
 			std::numeric_limits<uint64_t>::max());
 
+		// timeout=maxï¼šä¸€ç›´ç­‰åˆ°æœ‰å›¾ï¼›æˆåŠŸå signal imageAvailableï¼ˆGPU ä¾§ï¼‰
+		// ç¬¬ 5 å‚ fence è¿™é‡Œä¸ç”¨ï¼ˆä¼  NULLï¼‰ï¼Œç”¨ semaphore ä¸²åç»­ submit
 		VkResult result = vkAcquireNextImageKHR(
 			device.device(),
 			swapChain,
 			std::numeric_limits<uint64_t>::max(),
-			imageAvailableSemaphores[currentFrame],  // must be a not signaled semaphore
+			imageAvailableSemaphores[currentFrame],  // å¿…é¡»æ˜¯æœªå‘å‡ºä¿¡å·çš„ semaphore
 			VK_NULL_HANDLE,
 			imageIndex);
 
 		return result;
 	}
 
-	//Ìá½»ÃüÁî»º³åÇøµ½ GPU£¬²¢´¦Àí³ÊÏÖ½á¹û¡£´Ë·½·¨°üÀ¨Èı¸öÖ÷Òª²½Öè£º
+	// æäº¤å½•åˆ¶å¥½çš„ command bufferï¼Œå¹¶ present åˆ°å±å¹•
 	VkResult LVESwapChain::submitCommandBuffers(
 		const VkCommandBuffer* buffers, uint32_t* imageIndex)
 	{
-		//1. µÈ´ıÉÏÒ»¸öÍ¼Æ¬Íê³É¡£
+		// è‹¥è¿™å¼  swap image ä»è¢«æ›´æ—©çš„å¸§å ç”¨ï¼Œå…ˆç­‰é‚£ä¸ª fence
 		if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
 			vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
 		}
 		imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
 
-		//2. Ìá½»»æÖÆÃüÁîµ½»æÖÆ¶ÓÁĞ¡£
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
+		// ç­‰åˆ°ã€Œé¢œè‰²é™„ä»¶è¾“å‡ºã€é˜¶æ®µæ‰çœŸæ­£æ‰§è¡Œï¼ˆä¸ acquire çš„ imageAvailable é…å¯¹ï¼‰
 		VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = waitSemaphores;
-		submitInfo.pWaitDstStageMask = waitStages;
+		submitInfo.pWaitDstStageMask = waitStages;  // åœ¨å“ªäº›ç®¡çº¿é˜¶æ®µæ‰å¼€å§‹ç­‰ç»“æŸ
 
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = buffers;
 
-		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
+		// æŒ‰ imageIndex å– semaphoreï¼špresent ä¼šä¸€ç›´å ç”¨å®ƒï¼Œç›´åˆ°è¯¥å›¾å†æ¬¡è¢« acquire
+		// ï¼ˆä¸å¯æŒ‰ currentFrame å¤ç”¨ï¼Œå¦åˆ™ 3 å¼ å›¾ + 2 å¸§æ§½æ—¶ä¼š signal ä»åœ¨ present ä¸­çš„ semaphoreï¼‰
+		VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[*imageIndex] };
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
+		// æäº¤å‰æŠŠ fence ç½®æœªä¿¡å·ï¼›submit å®Œæˆåå†ä¿¡å·ï¼Œä¾›ä¸‹ä¸€è½® wait
 		vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
 
 		if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
 
-		//3. Ìá½»¸ø³ÊÏÖ¶ÓÁĞÒÔÏÔÊ¾½á¹û¡£
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = signalSemaphores;
+		presentInfo.pWaitSemaphores = signalSemaphores;  // ç­‰æ¸²æŸ“å®Œæˆå†æ˜¾ç¤º
 
 		VkSwapchainKHR swapChains[] = { swapChain };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
-
-		presentInfo.pImageIndices = imageIndex;
+		presentInfo.pImageIndices = imageIndex;  // è¦æ˜¾ç¤ºçš„é‚£å¼  image ä¸‹æ ‡
 
 		auto result = vkQueuePresentKHR(device.presentQueue(), &presentInfo);
 
@@ -138,14 +143,12 @@ namespace lve {
 	}
 
 	void LVESwapChain::createSwapChain() {
-		//»ñÈ¡Ö§³ÖµÄĞÅÏ¢£¬Èç±íÃæ¸ñÊ½¡¢³ÊÏÖÄ£Ê½ÒÔ¼°À©Õ¹ĞÅÏ¢¡£
 		SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
-		//surfaceFormat: ÃèÊöÑÕÉ«¸ñÊ½¼°ÆäÑÕÉ«¿Õ¼ä£¬±ÈÈçÑ¡ÔñÉ«²Ê¿Õ¼äÎª sRGB µÄ B8G8R8A8 ¸ñÊ½±íÊ¾.
 		VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-		//presentMode: ÃèÊöÈçºÎ½«ÒÑ×¼±¸ºÃµÄ»­ÃæÕ¹Ê¾µ½ÆÁÄ»£¬±ÈÈçÑ¡Ôñ MAILBOX Ä£Ê½¿ÉÒÔ¼õÉÙÑÓ³Ù.
 		VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
 		VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
+		// æ¯”é©±åŠ¨æœ€å°å€¼å¤šè¦ 1 å¼ ï¼Œå‡å°‘ç­‰å›¾é˜»å¡ï¼›å†å¤¹åˆ° maxImageCountï¼ˆ0 è¡¨ç¤ºæ— ä¸Šé™ï¼‰
 		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 		if (swapChainSupport.capabilities.maxImageCount > 0 &&
 			imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -157,42 +160,41 @@ namespace lve {
 		createInfo.surface = device.surface();
 
 		createInfo.minImageCount = imageCount;
-		createInfo.imageFormat = surfaceFormat.format;
-		createInfo.imageColorSpace = surfaceFormat.colorSpace;
-		createInfo.imageExtent = extent;
-		createInfo.imageArrayLayers = 1;
-		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		createInfo.imageFormat = surfaceFormat.format;           // å¦‚ B8G8R8A8_SRGB
+		createInfo.imageColorSpace = surfaceFormat.colorSpace; // å¦‚ SRGB_NONLINEAR
+		createInfo.imageExtent = extent;                         // åƒç´ å®½é«˜
+		createInfo.imageArrayLayers = 1;                         // 2D éç«‹ä½“åˆ™ä¸º 1
+		createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;  // å½“ä½œé¢œè‰²æ¸²æŸ“ç›®æ ‡
 
 		QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
 		uint32_t queueFamilyIndices[] = { indices.graphicsFamily, indices.presentFamily };
 
 		if (indices.graphicsFamily != indices.presentFamily) {
+			// å›¾å½¢ä¸å‘ˆç°ä¸åœ¨åŒä¸€é˜Ÿåˆ—æ—ï¼šå›¾åƒéœ€å¹¶å‘å…±äº«
 			createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 			createInfo.queueFamilyIndexCount = 2;
 			createInfo.pQueueFamilyIndices = queueFamilyIndices;
 		}
 		else {
-			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			createInfo.queueFamilyIndexCount = 0;      // Optional
-			createInfo.pQueueFamilyIndices = nullptr;  // Optional
+			createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;  // ç‹¬å ï¼Œæ›´é«˜æ•ˆ
+			createInfo.queueFamilyIndexCount = 0;
+			createInfo.pQueueFamilyIndices = nullptr;
 		}
 
-		createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		createInfo.preTransform = swapChainSupport.capabilities.currentTransform;  // é€šå¸¸ IDENTITY
+		createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;  // ä¸çª—å£åˆæˆï¼šä¸é€æ˜
 
 		createInfo.presentMode = presentMode;
-		createInfo.clipped = VK_TRUE;
+		createInfo.clipped = VK_TRUE;  // è¢«å…¶å®ƒçª—å£æŒ¡ä½çš„åƒç´ å¯ä¸æ¸²æŸ“
 
+		// é‡å»ºæ—¶ä¼ å…¥æ—§é“¾ï¼Œä¾¿äºé©±åŠ¨å¤ç”¨/å¹³æ»‘è¿‡æ¸¡
 		createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
 
-		//µ÷ÓÃ vkCreateSwapchainKHR() À´Êµ¼Ê´´½¨ swap chain
 		if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create swap chain!");
 		}
 
-		// ÎÒÃÇÖ»Ö¸¶¨ÁË½»»»Á´ÖĞÍ¼ÏñµÄ×îĞ¡ÊıÁ¿£¬ËùÒÔÊµÏÖÊÇÔÊĞí´´½¨¸ü¶à½»»»Á´¡£
-		// Õâ¾ÍÊÇÎªÊ²Ã´ÎÒÃÇÊ×ÏÈÒª²éÑ¯×îÖÕµÄÊıÁ¿Ê¹ÓÃ vkGetSwapchainImagesKHR »ñÈ¡Í¼Ïñ£¬È»ºóµ÷ÕûÈİÆ÷´óĞ¡£¬×îºóÔÙ´Îµ÷ÓÃ¼ìË÷¾ä±ú¡£
-		// È¡µÃÏàÓ¦Éú³ÉµÄ swap chain images¡£
+		// minImageCount åªæ˜¯ä¸‹é™ï¼›å®é™…å¼ æ•°å¯èƒ½æ›´å¤š â†’ å…ˆæŸ¥æ•°é‡å†å–å¥æŸ„
 		vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, nullptr);
 		swapChainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
@@ -201,7 +203,7 @@ namespace lve {
 		swapChainExtent = extent;
 	}
 
-	//ÎªÃ¿¸ö swap chain Í¼Ïñ´´Ôì¶ÔÓ¦µÄ image view£¬ÒÔ±ã×ÅÉ«Æ÷ÄÜ¹»·ÃÎÊÕâĞ©Í¼Ïñ.
+	// Image æ˜¯åŸå§‹åƒç´ å­˜å‚¨ï¼›ImageView å‘Šè¯‰ç®¡çº¿ã€ŒæŒ‰ä»€ä¹ˆç±»å‹/aspect è§£è¯»ã€
 	void LVESwapChain::createImageViews() {
 		swapChainImageViews.resize(swapChainImages.size());
 		for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -210,9 +212,9 @@ namespace lve {
 			viewInfo.image = swapChainImages[i];
 			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			viewInfo.format = swapChainImageFormat;
-			viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;  // é¢œè‰²é¢ï¼ˆéæ·±åº¦ï¼‰
 			viewInfo.subresourceRange.baseMipLevel = 0;
-			viewInfo.subresourceRange.levelCount = 1;
+			viewInfo.subresourceRange.levelCount = 1;   // æ—  mip é“¾
 			viewInfo.subresourceRange.baseArrayLayer = 0;
 			viewInfo.subresourceRange.layerCount = 1;
 
@@ -223,44 +225,45 @@ namespace lve {
 		}
 	}
 
-	//¶¨ÒåÁËÒ»ÏµÁĞ¸½¼ÓËµÃ÷£¬°üÀ¨ÔõÃ´´¦ÀíÑÕÉ«¸½¼şÓëÉî¶È¸½¼ş£¬ÒÔ¼°ËüÃÇÖ®¼äÒÀÀµ¹ØÏµ.
+	// RenderPassï¼šæè¿°é™„ä»¶ã€Œå¼€å§‹æ€ä¹ˆå¤„ç†ã€ç»“æŸå˜æˆä»€ä¹ˆå¸ƒå±€ã€subpass æ€ä¹ˆç”¨å®ƒä»¬ã€
 	void LVESwapChain::createRenderPass() {
 		VkAttachmentDescription depthAttachment{};
 		depthAttachment.format = findDepthFormat();
-		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;           // æ—  MSAA
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;     // å¼€å§‹æ—¶æ¸…æ·±åº¦
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;  // ç»“æŸåä¸éœ€è¦ä¿ç•™æ·±åº¦
 		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;  // ä¸ä¿ç•™æ—§å†…å®¹
 		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.attachment = 1;  // å¯¹åº” attachments æ•°ç»„ä¸‹æ ‡ 1
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentDescription colorAttachment = {};
 		colorAttachment.format = getSwapChainImageFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;   // æ¸…æˆ beginRenderPass çš„ clearValue
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // è¦æ‹¿å» presentï¼Œå¿…é¡»ä¿ç•™
 		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;  // ç»“æŸåå¯å‘ˆç°
 
 		VkAttachmentReference colorAttachmentRef = {};
-		colorAttachmentRef.attachment = 0;
-		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachmentRef.attachment = 0;  // attachments[0]
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;  // subpass å†…å¸ƒå±€
 
 		VkSubpassDescription subpass = {};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colorAttachmentRef;
+		subpass.pColorAttachments = &colorAttachmentRef;  // å¯¹åº” shader çš„ layout(location=0) out
 		subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
+		// å¤–éƒ¨ï¼ˆä¸Šä¸€å¸§ present / å¸ƒå±€è½¬æ¢ï¼‰â†’ æœ¬ subpass å†™é¢œè‰²/æ·±åº¦ ä¹‹å‰çš„ä¾èµ–
 		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;  // éšå¼ã€Œå¤–éƒ¨ã€subpass
 		dependency.srcAccessMask = 0;
 		dependency.srcStageMask =
 			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
@@ -285,7 +288,7 @@ namespace lve {
 		}
 	}
 
-	//¶¨ÒåÁËÒ»ÏµÁĞ¸½¼ÓËµÃ÷£¬°üÀ¨ÔõÃ´´¦ÀíÑÕÉ«¸½¼şÓëÉî¶È¸½¼ş£¬ÒÔ¼°ËüÃÇÖ®¼äÒÀÀµ¹ØÏµ.
+	// Framebuffer = æŸæ¬¡ RenderPass å®é™…ç»‘åˆ°çš„ ImageView é›†åˆï¼ˆé¢œè‰² + æ·±åº¦ï¼‰ï¼Œæ¯å¼  swap image ä¸€ä¸ª
 	void LVESwapChain::createFramebuffers() {
 		swapChainFramebuffers.resize(imageCount());
 		for (size_t i = 0; i < imageCount(); i++) {
@@ -294,9 +297,9 @@ namespace lve {
 			VkExtent2D swapChainExtent = getSwapChainExtent();
 			VkFramebufferCreateInfo framebufferInfo = {};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebufferInfo.renderPass = renderPass;
+			framebufferInfo.renderPass = renderPass;  // å¿…é¡»ä¸åˆ›å»ºæ—¶å…¼å®¹çš„é‚£ä¸ª RenderPass
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-			framebufferInfo.pAttachments = attachments.data();
+			framebufferInfo.pAttachments = attachments.data();  // é¡ºåºå¯¹åº” RenderPass é™„ä»¶ä¸‹æ ‡
 			framebufferInfo.width = swapChainExtent.width;
 			framebufferInfo.height = swapChainExtent.height;
 			framebufferInfo.layers = 1;
@@ -311,7 +314,7 @@ namespace lve {
 		}
 	}
 
-	//ÎªÃ¿¸ö image view ºÍ depth attachment ´´Ôì framebuffer£¬ÓÃÓÚ×îÖÕ»æÖÆ½á¹û.
+	// æ·±åº¦å›¾ï¼šä¸æ¯å¼ é¢œè‰² swap image åŒå°ºå¯¸ï¼›DEVICE_LOCALï¼›aspect=DEPTH
 	void LVESwapChain::createDepthResources() {
 		VkFormat depthFormat = findDepthFormat();
 		swapChainDepthFormat = depthFormat;
@@ -327,11 +330,11 @@ namespace lve {
 			imageInfo.imageType = VK_IMAGE_TYPE_2D;
 			imageInfo.extent.width = swapChainExtent.width;
 			imageInfo.extent.height = swapChainExtent.height;
-			imageInfo.extent.depth = 1;
+			imageInfo.extent.depth = 1;       // 2D å›¾ depth ç»´ä¸º 1
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
-			imageInfo.format = depthFormat;
-			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+			imageInfo.format = depthFormat; // D32 / D24_S8 ç­‰
+			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;  // GPU æœ€ä¼˜æ’å¸ƒï¼ŒCPU ä¸€èˆ¬ä¸ç›´æ¥è¯»
 			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -361,11 +364,10 @@ namespace lve {
 		}
 	}
 
-	//Îª Vulkan Í¼ĞÎÓ¦ÓÃ³ÌĞò´´½¨Í¬²½¶ÔÏó£¬ÒÔ±ãÔÚ¶àÖ¡äÖÈ¾¹ı³ÌÖĞÓĞĞ§µØ¹ÜÀí×ÊÔ´ºÍÍ¬²½²Ù×÷¡£
-	// ¾ßÌåÀ´Ëµ£¬Ëü´´½¨ÁËÓÃÓÚÃ¿Ò»Ö¡µÄĞÅºÅÁ¿£¨semaphores£©ºÍÕ¤À¸£¨fences£©£¬ÒÔÈ·±£Í¼ĞÎäÖÈ¾µÄÕıÈ·Ë³ĞòºÍÍ¬²½¡£
+	// imageAvailable / fenceï¼šæŒ‰å¸§æ§½ï¼›renderFinishedï¼šæŒ‰ swap å›¾åƒæ•°ï¼ˆè§ Vulkan Guide swapchain_semaphore_reuseï¼‰
 	void LVESwapChain::createSyncObjects() {
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		renderFinishedSemaphores.resize(imageCount());
 		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 		imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
 
@@ -374,31 +376,37 @@ namespace lve {
 
 		VkFenceCreateInfo fenceInfo = {};
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		// åˆå§‹å·²ä¿¡å·ï¼šå¦åˆ™é¦–å¸§ acquire å‰ waitFence ä¼šæ°¸è¿œå¡ä½
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) !=
 				VK_SUCCESS ||
-				vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
-				VK_SUCCESS ||
 				vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-				throw std::runtime_error("failed to create synchronization objects for a frame!");
+				throw std::runtime_error("failed to create per-frame sync objects!");
+			}
+		}
+		for (size_t i = 0; i < imageCount(); i++) {
+			if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
+				VK_SUCCESS) {
+				throw std::runtime_error("failed to create per-image renderFinished semaphore!");
 			}
 		}
 	}
 
+	// ä¼˜å…ˆ sRGB æ ¼å¼ï¼šæ˜¾ç¤ºæ›´ç¬¦åˆäººçœ¼ï¼›UNORM æ˜¯çº¿æ€§ç©ºé—´ï¼Œé€‚åˆä¸­é—´è®¡ç®—çº¹ç†
 	VkSurfaceFormatKHR LVESwapChain::chooseSwapSurfaceFormat(
 		const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 		for (const auto& availableFormat : availableFormats) {
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&//VK_FORMAT_B8G8R8A8_UNORM
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
 				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				return availableFormat;
 			}
 		}
-
-		return availableFormats[0];
+		return availableFormats[0];  // é€€åŒ–ï¼šç”¨åˆ—è¡¨ç¬¬ä¸€ä¸ª
 	}
 
+	// MAILBOXâ‰ˆä¸‰ç¼“å†²ä½å»¶è¿Ÿï¼›æ²¡æœ‰åˆ™ FIFOï¼ˆä¿è¯æ”¯æŒçš„ VSyncï¼‰
 	VkPresentModeKHR LVESwapChain::chooseSwapPresentMode(
 		const std::vector<VkPresentModeKHR>& availablePresentModes)
 	{
@@ -408,18 +416,11 @@ namespace lve {
 				return availablePresentMode;
 			}
 		}
-
-		// for (const auto &availablePresentMode : availablePresentModes) {
-		//   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-		//     std::cout << "Present mode: Immediate" << std::endl;
-		//     return availablePresentMode;
-		//   }
-		// }
-
 		std::cout << "Present mode: V-Sync" << std::endl;
 		return VK_PRESENT_MODE_FIFO_KHR;
 	}
 
+	// å¤šæ•°å¹³å° currentExtent å·²å›ºå®šä¸ºçª—å£å¤§å°ï¼›è‹¥ä¸º special max å€¼åˆ™éœ€è‡ªå·± clamp
 	VkExtent2D LVESwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
 			return capabilities.currentExtent;
@@ -432,11 +433,11 @@ namespace lve {
 			actualExtent.height = std::max(
 				capabilities.minImageExtent.height,
 				std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
 			return actualExtent;
 		}
 	}
 
+	// æŒ‰ä¼˜å…ˆçº§æ‰¾ã€Œèƒ½å½“æ·±åº¦é™„ä»¶ + OPTIMAL tilingã€çš„æ ¼å¼
 	VkFormat LVESwapChain::findDepthFormat() {
 		return device.findSupportedFormat(
 			{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
@@ -445,25 +446,3 @@ namespace lve {
 	}
 
 }  // namespace lve
-
-
-/*
-`VK_FORMAT_B8G8R8A8_UNORM` ºÍ `VK_FORMAT_B8G8R8A8_SRGB` ÊÇ Vulkan API ÖĞ¶¨ÒåµÄÁ½ÖÖ²»Í¬µÄÑÕÉ«¸ñÊ½¡£ËüÃÇÖ®¼äµÄÖ÷ÒªÇø±ğÔÚÓÚÑÕÉ«¿Õ¼äºÍÉ«²Ê´¦Àí·½Ê½¡£ÏÂÃæÊÇÕâÁ½ÖÖ¸ñÊ½µÄÏêÏ¸½âÊÍ£º
-
-1. **VK_FORMAT_B8G8R8A8_UNORM**£º
-   - **ÀàĞÍ**£ºÕâÊÇÒ»¸öÎ´½øĞĞÉ«²Ê¿Õ¼ä×ª»»µÄ¸ñÊ½£¨linear format£©¡£
-   - **É«²Ê¿Õ¼ä**£ºËüÔÚÏßĞÔ¿Õ¼äÖĞ±íÊ¾ÑÕÉ«Öµ£¬¼´ÑÕÉ«µÄ´¦ÀíÊÇÒÔÏßĞÔ·½Ê½½øĞĞµÄ¡£ÕâÒâÎ¶×ÅÑÕÉ«ÖµÖ±½Ó¶ÔÓ¦ÓÚ¹âÇ¿¶È£¬¿ÉÒÔÓÃÓÚ¼ÆËãºÍÏßĞÔ²åÖµµÈ²Ù×÷¡£
-   - **ÓÃÍ¾**£ºÊÊºÏÔÚĞèÒªÏßĞÔÑÕÉ«¼ÆËãµÄ³¡ºÏ£¬±ÈÈçÎïÀí»ù´¡äÖÈ¾£¨PBR£©»òÎÆÀí²ÉÑùÊ±¡£Èç¹ûÔÚÕâ¸ö¸ñÊ½ÏÂ½øĞĞÎÆÀí¹ıÂËºÍ»ìºÏ£¬½á¹û»áÖ±½Ó»ùÓÚ¹âÏßµÄÇ¿¶È½øĞĞ¼ÆËã¡£
-
-2. **VK_FORMAT_B8G8R8A8_SRGB**£º
-   - **ÀàĞÍ**£ºÕâÊÇÒ»¸ö±ê×¼RGB¸ñÊ½£¨gamma-corrected format£©¡£
-   - **É«²Ê¿Õ¼ä**£ºËüÊ¹ÓÃsRGBÉ«²Ê¿Õ¼ä£¬ÕâÊÇÒ»¸ö¸Ä½øµÄÑÕÉ«¿Õ¼ä£¬¿¼ÂÇµ½ÁËÈËÑÛ¶Ô²»Í¬ÁÁ¶ÈµÄ¸ĞÖª¡£Õâ¸ö¿Õ¼ä»áÔÚ½ÏµÍÁÁ¶ÈÏÂ½øĞĞ·ÇÏßĞÔ´¦Àí£¬ÌáÉı°µ²¿Ï¸½Ú¡£
-   - **ÓÃÍ¾**£ºÊÊºÏÓÃÓÚÓÃ»§½çÃæ»ò×îÖÕÊä³ö¸øÏÔÊ¾Éè±¸µÄÎÆÀí£¬ÒòÎªËü¿ÉÒÔÌá¹©¸üºÃµÄÊÓ¾õĞ§¹û¡£Ê¹ÓÃ´Ë¸ñÊ½½øĞĞ»æÖÆµÄ¹ı³Ì¿ÉÒÔÈÃÎÆÀíÔÚÏÔÊ¾Ê±×Ô¶¯Ó¦ÓÃgammaĞ£Õı¡£
-
-### ×Ü½á
-- **VK_FORMAT_B8G8R8A8_UNORM** ÊÇÔÚÏßĞÔ¿Õ¼äÖĞ´¦ÀíµÄ£¬ÊÊºÏĞèÒª¾«È·¼ÆËãµÄ³¡¾°¡£
-- **VK_FORMAT_B8G8R8A8_SRGB** ÊÇÔÚsRGB¿Õ¼äÖĞ´¦ÀíµÄ£¬¸üÊÊºÏÊÓ¾õÓÈÎªÖØÒªµÄ³¡ºÏ£¬ÈçUIäÖÈ¾ºÍ×îÖÕÍ¼ÏñÊä³ö¡£
-
-ÔÚÑ¡ÔñÊ¹ÓÃÄÄÖÖ¸ñÊ½Ê±£¬ĞèÒª¸ù¾İÄãµÄäÖÈ¾ĞèÇóÀ´¾ö¶¨Ê¹ÓÃÄÄ¸ö¡£ÓĞÊ±£¬ÔÚÍ¬Ò»¸öäÖÈ¾¹ı³ÌÖĞ£¬¿ÉÄÜ»áÍ¬Ê±Ê¹ÓÃÕâÁ½Õß£¬ÏÈÔÚ`UNORM`¸ñÊ½ÖĞ½øĞĞ¼ÆËã£¬×îºó×ª»»³É`sRGB`¸ñÊ½½øĞĞÏÔÊ¾¡£
-
-*/
