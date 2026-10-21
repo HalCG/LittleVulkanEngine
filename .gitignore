@@ -1,2 +1,9 @@
 .vs/
 x64/
+
+# Local-only: commit conventions / Cursor rules / agent helpers — do not push
+.cursor/
+.githooks/
+scripts/git-commit-clean.ps1
+scripts/strip-cursor-commit-trailer.ps1
+scripts/amend-commit-message.ps1
