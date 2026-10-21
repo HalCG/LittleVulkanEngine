@@ -8,23 +8,23 @@
 
 namespace lve {
 
-	// µ÷ÊÔ»Øµ÷º¯Êı£¬ÓÃÓÚ´¦Àí Vulkan µÄµ÷ÊÔĞÅÏ¢
+	// è°ƒè¯•å›è°ƒå‡½æ•°ï¼Œç”¨äºå¤„ç† Vulkan çš„è°ƒè¯•ä¿¡æ¯
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,     // ÏûÏ¢µÄÑÏÖØĞÔ£¨ÀıÈç¾¯¸æ¡¢´íÎó£©¡£
-		VkDebugUtilsMessageTypeFlagsEXT messageType,                // ÏûÏ¢µÄÀàĞÍ£¨Ò»°ã¡¢ÑéÖ¤¡¢ĞÔÄÜµÈ£©¡£
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,  // °üº¬µ÷ÊÔÏûÏ¢µÄÏêÏ¸ĞÅÏ¢¡£
-		void* pUserData) {                                          // ÓÃ»§×Ô¶¨ÒåÊı¾İ£¬Í¨³£Îª nullptr¡£
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,     // æ¶ˆæ¯çš„ä¸¥é‡æ€§ï¼ˆä¾‹å¦‚è­¦å‘Šã€é”™è¯¯ï¼‰ã€‚
+		VkDebugUtilsMessageTypeFlagsEXT messageType,                // æ¶ˆæ¯çš„ç±»å‹ï¼ˆä¸€èˆ¬ã€éªŒè¯ã€æ€§èƒ½ç­‰ï¼‰ã€‚
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,  // åŒ…å«è°ƒè¯•æ¶ˆæ¯çš„è¯¦ç»†ä¿¡æ¯ã€‚
+		void* pUserData) {                                          // ç”¨æˆ·è‡ªå®šä¹‰æ•°æ®ï¼Œé€šå¸¸ä¸º nullptrã€‚
 		std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
 		return VK_FALSE;
 	}
 
-	//´´½¨µ÷ÊÔÏûÏ¢´¦ÀíÆ÷£¬ÓÃÓÚ²¶»ñºÍ´¦Àí Vulkan µÄµ÷ÊÔĞÅÏ¢¡£
+	//åˆ›å»ºè°ƒè¯•æ¶ˆæ¯å¤„ç†å™¨ï¼Œç”¨äºæ•è·å’Œå¤„ç† Vulkan çš„è°ƒè¯•ä¿¡æ¯ã€‚
 	VkResult CreateDebugUtilsMessengerEXT(
-		VkInstance instance,                                    //Vulkan ÊµÀı¡£
-		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,  //´´½¨ĞÅÏ¢½á¹¹Ìå£¬°üº¬µ÷ÊÔÏûÏ¢µÄÅäÖÃ¡£
-		const VkAllocationCallbacks* pAllocator,                //·ÖÅä»Øµ÷£¨Í¨³£Îª nullptr£©¡£
-		VkDebugUtilsMessengerEXT* pDebugMessenger) {            //Êä³öµÄµ÷ÊÔÏûÏ¢´¦ÀíÆ÷¾ä±ú¡£
+		VkInstance instance,                                    //Vulkan å®ä¾‹ã€‚
+		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,  //åˆ›å»ºä¿¡æ¯ç»“æ„ä½“ï¼ŒåŒ…å«è°ƒè¯•æ¶ˆæ¯çš„é…ç½®ã€‚
+		const VkAllocationCallbacks* pAllocator,                //åˆ†é…å›è°ƒï¼ˆé€šå¸¸ä¸º nullptrï¼‰ã€‚
+		VkDebugUtilsMessengerEXT* pDebugMessenger) {            //è¾“å‡ºçš„è°ƒè¯•æ¶ˆæ¯å¤„ç†å™¨å¥æŸ„ã€‚
 		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
 			instance,
 			"vkCreateDebugUtilsMessengerEXT");
@@ -36,7 +36,7 @@ namespace lve {
 		}
 	}
 
-	//Ïú»Ùµ÷ÊÔÏûÏ¢´¦ÀíÆ÷¡£
+	//é”€æ¯è°ƒè¯•æ¶ˆæ¯å¤„ç†å™¨ã€‚
 	void DestroyDebugUtilsMessengerEXT(
 		VkInstance instance,
 		VkDebugUtilsMessengerEXT debugMessenger,
@@ -49,7 +49,7 @@ namespace lve {
 		}
 	}
 
-	// class member functions
+	// æ„é€ é¡ºåºå›ºå®šï¼šInstance â†’ æ ¡éªŒå±‚ â†’ Surface â†’ é€‰ GPU â†’ é€»è¾‘è®¾å¤‡/é˜Ÿåˆ— â†’ CommandPool
 	LVEDevice::LVEDevice(LVEWindow& window) : window{ window } {
 		createInstance();
 		setupDebugMessenger();
@@ -71,7 +71,7 @@ namespace lve {
 		vkDestroyInstance(instance, nullptr);
 	}
 
-	//´´½¨ Vulkan ÊµÀı
+	//åˆ›å»º Vulkan å®ä¾‹
 	void LVEDevice::createInstance() {
 		if (enableValidationLayers && !checkValidationLayerSupport()) {
 			throw std::runtime_error("validation layers requested, but not available!");
@@ -113,9 +113,9 @@ namespace lve {
 		hasGflwRequiredInstanceExtensions();
 	}
 
-	//Ñ¡ÔñÎïÀíÉè±¸
+	//é€‰æ‹©ç‰©ç†è®¾å¤‡
 	void LVEDevice::pickPhysicalDevice() {
-		//Í¨¹ı vkEnumeratePhysicalDevices »ñÈ¡¿ÉÓÃµÄÎïÀíÉè±¸ÁĞ±í¡£
+		//é€šè¿‡ vkEnumeratePhysicalDevices è·å–å¯ç”¨çš„ç‰©ç†è®¾å¤‡åˆ—è¡¨ã€‚
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 		if (deviceCount == 0) {
@@ -125,7 +125,7 @@ namespace lve {
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-		//±éÀúÉè±¸£¬µ÷ÓÃ isDeviceSuitable ¼ì²éÃ¿¸öÉè±¸ÊÇ·ñÊÊºÏ¡£
+		//éå†è®¾å¤‡ï¼Œè°ƒç”¨ isDeviceSuitable æ£€æŸ¥æ¯ä¸ªè®¾å¤‡æ˜¯å¦é€‚åˆã€‚
 		for (const auto& device : devices) {
 			if (isDeviceSuitable(device)) {
 				physicalDevice = device;
@@ -141,14 +141,15 @@ namespace lve {
 		std::cout << "physical device: " << properties.deviceName << std::endl;
 	}
 
-	//´´½¨Âß¼­Éè±¸
+	// é€»è¾‘è®¾å¤‡ = å¯¹ç‰©ç† GPU çš„ã€Œä½¿ç”¨å¥æŸ„ã€ï¼šå£°æ˜è¦å“ªäº›é˜Ÿåˆ—ã€æ‰©å±•ã€ç‰¹æ€§
 	void LVEDevice::createLogicalDevice() {
 		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+		// å›¾å½¢ä¸å‘ˆç°å¯èƒ½æ˜¯åŒä¸€ familyï¼Œç”¨ set å»é‡ï¼Œé¿å…é‡å¤åˆ›å»º
 		std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily, indices.presentFamily };
 
-		float queuePriority = 1.0f;
+		float queuePriority = 1.0f;  // 0~1ï¼Œå¤šé˜Ÿåˆ—è°ƒåº¦ä¼˜å…ˆçº§ï¼›è¿™é‡Œåªæœ‰ä¸€æ¡é˜Ÿåˆ—
 		for (uint32_t queueFamily : uniqueQueueFamilies) {
 			VkDeviceQueueCreateInfo queueCreateInfo = {};
 			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -159,43 +160,36 @@ namespace lve {
 		}
 
 		VkPhysicalDeviceFeatures deviceFeatures = {};
-		deviceFeatures.samplerAnisotropy = VK_TRUE;
+		deviceFeatures.samplerAnisotropy = VK_TRUE;  // å„å‘å¼‚æ€§è¿‡æ»¤ï¼ˆçº¹ç†ç”¨ï¼›æœ¬ demo å¯å…ˆå½“ã€Œå£°æ˜ç‰¹æ€§ã€ï¼‰
 
 		VkDeviceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
 		createInfo.pEnabledFeatures = &deviceFeatures;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();  // å¿…å« swapchain æ‰©å±•
 
-		// might not really be necessary anymore because device specific validation layers
-		// have been deprecated
-		if (enableValidationLayers) {
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
-		}
-		else {
-			createInfo.enabledLayerCount = 0;
-		}
+		// Vulkan 1.0 èµ· Device Layer å·²åºŸå¼ƒï¼šåªèƒ½ç”¨ Instance Layerï¼Œæ­¤å¤„å¿…é¡»ä¸º 0
+		createInfo.enabledLayerCount = 0;
 
 		if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device_) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create logical device!");
 		}
 
+		// ä»é€»è¾‘è®¾å¤‡å–å‡ºé˜Ÿåˆ—å¥æŸ„ï¼ˆç¬¬ 3 å‚=è¯¥ family å†…ç¬¬å‡ æ¡é˜Ÿåˆ—ï¼Œä» 0 èµ·ï¼‰
 		vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
 		vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
 	}
 
-	//´´½¨ÃüÁî³Ø£¬ÓÃÓÚ¹ÜÀíÃüÁî»º³åÇø¡£
+	// CommandPoolï¼šä»ä¸­åˆ†é… CommandBufferï¼›å¿…é¡»ç»‘å®šåˆ°ã€Œå°†è¦ submit çš„é‚£ä¸ªé˜Ÿåˆ—æ—ã€
 	void LVEDevice::createCommandPool() {
 		QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies();
 
 		VkCommandPoolCreateInfo poolInfo = {};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
+		// TRANSIENTï¼šçŸ­å‘½å‘½ä»¤æç¤ºï¼›RESETï¼šå…è®¸å•ç‹¬ reset æŸä¸ª command bufferï¼ˆæ¯å¸§é‡å½•éœ€è¦ï¼‰
 		poolInfo.flags =
 			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
@@ -204,6 +198,7 @@ namespace lve {
 		}
 	}
 
+	// ä¾èµ–å·²åˆ›å»ºçš„ Instance ä¸ Windowï¼Œå¾—åˆ°å¯å‘ˆç°çš„ VkSurfaceKHR
 	void LVEDevice::createSurface() { window.createWindowSurface(instance, &surface_); }
 
 	bool LVEDevice::isDeviceSuitable(VkPhysicalDevice device) {
@@ -246,16 +241,16 @@ namespace lve {
 		}
 	}
 
-	//¼ì²éÑéÖ¤²ãÖ§³Ö
+	//æ£€æŸ¥éªŒè¯å±‚æ”¯æŒ
 	bool LVEDevice::checkValidationLayerSupport() {
-		//1. Ê¹ÓÃ vkEnumerateInstanceLayerProperties »ñÈ¡¿ÉÓÃ²ãµÄÊıÁ¿ºÍÊôĞÔ¡£
+		//1. ä½¿ç”¨ vkEnumerateInstanceLayerProperties è·å–å¯ç”¨å±‚çš„æ•°é‡å’Œå±æ€§ã€‚
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-		//2. ±éÀú validationLayers ÖĞµÄÃ¿¸ö²ã£¬¼ì²éËüÃÇÊÇ·ñÔÚ¿ÉÓÃ²ãÁĞ±íÖĞ¡£Èç¹ûÓĞÈÎºÎÇëÇóµÄ²ã²»¿ÉÓÃ£¬·µ»Ø false£»·ñÔò·µ»Ø true¡£
+		//2. éå† validationLayers ä¸­çš„æ¯ä¸ªå±‚ï¼Œæ£€æŸ¥å®ƒä»¬æ˜¯å¦åœ¨å¯ç”¨å±‚åˆ—è¡¨ä¸­ã€‚å¦‚æœæœ‰ä»»ä½•è¯·æ±‚çš„å±‚ä¸å¯ç”¨ï¼Œè¿”å› falseï¼›å¦åˆ™è¿”å› trueã€‚
 		for (const char* layerName : validationLayers) {
 			bool layerFound = false;
 
@@ -274,7 +269,7 @@ namespace lve {
 		return true;
 	}
 
-	//»ñÈ¡ËùĞèµÄÀ©Õ¹
+	//è·å–æ‰€éœ€çš„æ‰©å±•
 	std::vector<const char*> LVEDevice::getRequiredExtensions() {
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions;
@@ -289,7 +284,7 @@ namespace lve {
 		return extensions;
 	}
 
-	//¼ì²é GLFW ËùĞèµÄÊµÀıÀ©Õ¹
+	//æ£€æŸ¥ GLFW æ‰€éœ€çš„å®ä¾‹æ‰©å±•
 	void LVEDevice::hasGflwRequiredInstanceExtensions() {
 		uint32_t extensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -313,9 +308,9 @@ namespace lve {
 		}
 	}
 
-	//¼ì²éÉè±¸À©Õ¹Ö§³Ö
+	//æ£€æŸ¥è®¾å¤‡æ‰©å±•æ”¯æŒ
 	bool LVEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
-		//1. ²éÑ¯¸ÃÎïÀíÉè±¸Ö§³ÖµÄÀ©Õ¹ÊıÁ¿£¬²¢»ñÈ¡¿ÉÓÃÀ©Õ¹ÊôĞÔ¡£
+		//1. æŸ¥è¯¢è¯¥ç‰©ç†è®¾å¤‡æ”¯æŒçš„æ‰©å±•æ•°é‡ï¼Œå¹¶è·å–å¯ç”¨æ‰©å±•å±æ€§ã€‚
 		uint32_t extensionCount;
 		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -326,28 +321,28 @@ namespace lve {
 			&extensionCount,
 			availableExtensions.data());
 
-		//2. ½«ËùĞèÀ©Õ¹Ìí¼Óµ½Ò»¸ö¼¯ºÏÖĞ
+		//2. å°†æ‰€éœ€æ‰©å±•æ·»åŠ åˆ°ä¸€ä¸ªé›†åˆä¸­
 		std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
-		//3. ±éÀú¿ÉÓÃÀ©Õ¹£¬²¢´ÓËùĞèÀ©Õ¹¼¯ºÏÖĞÉ¾³ıÄÇĞ©¿ÉÓÃµÄÀ©Õ¹
+		//3. éå†å¯ç”¨æ‰©å±•ï¼Œå¹¶ä»æ‰€éœ€æ‰©å±•é›†åˆä¸­åˆ é™¤é‚£äº›å¯ç”¨çš„æ‰©å±•
 		for (const auto& extension : availableExtensions) {
 			requiredExtensions.erase(extension.extensionName);
 		}
 
-		//4. Èç¹ûËùĞèÀ©Õ¹¼¯ºÏÎª¿Õ£¬±íÊ¾ËùÓĞËùĞèÀ©Õ¹¾ùÒÑÖ§³Ö£¬·µ»Ø true£»·´Ö®·µ»Ø false¡£
+		//4. å¦‚æœæ‰€éœ€æ‰©å±•é›†åˆä¸ºç©ºï¼Œè¡¨ç¤ºæ‰€æœ‰æ‰€éœ€æ‰©å±•å‡å·²æ”¯æŒï¼Œè¿”å› trueï¼›åä¹‹è¿”å› falseã€‚
 		return requiredExtensions.empty();
 	}
 
-	//²éÕÒ¶ÓÁĞ×å
+	//æŸ¥æ‰¾é˜Ÿåˆ—æ—
 	QueueFamilyIndices LVEDevice::findQueueFamilies(VkPhysicalDevice device) {
-		//1. ²éÑ¯ÎïÀíÉè±¸µÄ¶ÓÁĞ×åÊôĞÔ¡£
+		//1. æŸ¥è¯¢ç‰©ç†è®¾å¤‡çš„é˜Ÿåˆ—æ—å±æ€§ã€‚
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-		//2. ±éÀúÃ¿¸ö¶ÓÁĞ×å£¬¼ì²éÊÇ·ñÖ§³ÖÍ¼ĞÎÃüÁî£¨VK_QUEUE_GRAPHICS_BIT£©ºÍ±íÃæ³ÊÏÖÖ§³Ö¡£
+		//2. éå†æ¯ä¸ªé˜Ÿåˆ—æ—ï¼Œæ£€æŸ¥æ˜¯å¦æ”¯æŒå›¾å½¢å‘½ä»¤ï¼ˆVK_QUEUE_GRAPHICS_BITï¼‰å’Œè¡¨é¢å‘ˆç°æ”¯æŒã€‚
 		QueueFamilyIndices indices;
 		int i = 0;
 		for (const auto& queueFamily : queueFamilies) {
@@ -358,7 +353,7 @@ namespace lve {
 			VkBool32 presentSupport = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &presentSupport);
 			if (queueFamily.queueCount > 0 && presentSupport) {
-				//½«ÕÒµ½µÄ¶ÓÁĞ×åË÷Òı´æ´¢µ½ QueueFamilyIndices µÄ½á¹¹ÖĞ¡£
+				//å°†æ‰¾åˆ°çš„é˜Ÿåˆ—æ—ç´¢å¼•å­˜å‚¨åˆ° QueueFamilyIndices çš„ç»“æ„ä¸­ã€‚
 				indices.presentFamily = i;
 				indices.presentFamilyHasValue = true;
 			}
@@ -372,16 +367,16 @@ namespace lve {
 		return indices;
 	}
 
-	//²éÑ¯½»»»Á´Ö§³Ö
+	//æŸ¥è¯¢äº¤æ¢é“¾æ”¯æŒ
 	SwapChainSupportDetails LVEDevice::querySwapChainSupport(VkPhysicalDevice device) {
-		//1. »ñÈ¡ÎïÀíÉè±¸¶ÔÌØ¶¨±íÃæµÄ½»»»Á´ÄÜÁ¦¡£
+		//1. è·å–ç‰©ç†è®¾å¤‡å¯¹ç‰¹å®šè¡¨é¢çš„äº¤æ¢é“¾èƒ½åŠ›ã€‚
 		SwapChainSupportDetails details;
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_, &details.capabilities);
 
 		uint32_t formatCount;
 		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount, nullptr);
 
-		//2. ²éÑ¯¸Ã±íÃæÖ§³ÖµÄ¸ñÊ½£¬²¢´æ´¢ÔÚ details.formats ÖĞ¡£
+		//2. æŸ¥è¯¢è¯¥è¡¨é¢æ”¯æŒçš„æ ¼å¼ï¼Œå¹¶å­˜å‚¨åœ¨ details.formats ä¸­ã€‚
 		if (formatCount != 0) {
 			details.formats.resize(formatCount);
 			vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount, details.formats.data());
@@ -390,7 +385,7 @@ namespace lve {
 		uint32_t presentModeCount;
 		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_, &presentModeCount, nullptr);
 
-		//3. ²éÑ¯µ±Ç°±íÃæÖ§³ÖµÄ³ÊÏÖÄ£Ê½£¬²¢´æ´¢ÔÚ details.presentModes ÖĞ¡£
+		//3. æŸ¥è¯¢å½“å‰è¡¨é¢æ”¯æŒçš„å‘ˆç°æ¨¡å¼ï¼Œå¹¶å­˜å‚¨åœ¨ details.presentModes ä¸­ã€‚
 		if (presentModeCount != 0) {
 			details.presentModes.resize(presentModeCount);
 			vkGetPhysicalDeviceSurfacePresentModesKHR(
@@ -400,20 +395,20 @@ namespace lve {
 				details.presentModes.data());
 		}
 
-		//4. ·µ»Ø°üº¬Ïà¹ØĞÅÏ¢µÄ SwapChainSupportDetails ½á¹¹¡£
+		//4. è¿”å›åŒ…å«ç›¸å…³ä¿¡æ¯çš„ SwapChainSupportDetails ç»“æ„ã€‚
 		return details;
 	}
 
-	//²éÕÒÖ§³ÖµÄ¸ñÊ½
+	//æŸ¥æ‰¾æ”¯æŒçš„æ ¼å¼
 	VkFormat LVEDevice::findSupportedFormat(
 		const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) 
 	{
-		//1. ±éÀúºòÑ¡¸ñÊ½£¬»ñÈ¡Ã¿¸ö¸ñÊ½µÄÊôĞÔ¡£
+		//1. éå†å€™é€‰æ ¼å¼ï¼Œè·å–æ¯ä¸ªæ ¼å¼çš„å±æ€§ã€‚
 		for (VkFormat format : candidates) {
 			VkFormatProperties props;
 			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
 
-			//2. ¸ù¾İËùĞèµÄÏñËØÅÅÁĞ£¨ÏßĞÔ»ò×î¼Ñ£©ÒÔ¼°ĞèÒªµÄÌØĞÔ£¬¼ì²é¸Ã¸ñÊ½ÊÇ·ñÖ§³Ö¡£
+			//2. æ ¹æ®æ‰€éœ€çš„åƒç´ æ’åˆ—ï¼ˆçº¿æ€§æˆ–æœ€ä½³ï¼‰ä»¥åŠéœ€è¦çš„ç‰¹æ€§ï¼Œæ£€æŸ¥è¯¥æ ¼å¼æ˜¯å¦æ”¯æŒã€‚
 			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
 				return format;
 			}
@@ -425,13 +420,12 @@ namespace lve {
 		throw std::runtime_error("failed to find supported format!");
 	}
 
-	//²éÕÒÄÚ´æÀàĞÍ
+	// typeFilter=memoryRequirements.memoryTypeBitsï¼›properties=HOST_VISIBLE / DEVICE_LOCAL ç­‰
 	uint32_t LVEDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-		//1. È¡ÎïÀíÉè±¸µÄÄÚ´æÊôĞÔ¡£
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
-		//2. ±éÀúËùÓĞÄÚ´æÀàĞÍ£¬¼ì²éËüÃÇÊÇ·ñ·ûºÏÌØ¶¨µÄÀàĞÍ¹ıÂËÆ÷ºÍÄÚ´æÊôĞÔ¡£
+		// æ—¢è¦ç¬¬ i ä½è¢« typeFilter å…è®¸ï¼Œåˆè¦è¯¥ç±»å‹å…·å¤‡æ‰€éœ€ propertyFlags
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 			if ((typeFilter & (1 << i)) &&
 				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -442,7 +436,7 @@ namespace lve {
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
-	//´´½¨ Vulkan »º³åÇø²¢·ÖÅäÄÚ´æ
+	//åˆ›å»º Vulkan ç¼“å†²åŒºå¹¶åˆ†é…å†…å­˜
 	void LVEDevice::createBuffer(
 		VkDeviceSize size,
 		VkBufferUsageFlags usage,
@@ -450,7 +444,7 @@ namespace lve {
 		VkBuffer& buffer,
 		VkDeviceMemory& bufferMemory) 
 	{
-		//1. ÉèÖÃ»º³åÇø´´½¨ĞÅÏ¢£¬°üÀ¨´óĞ¡¡¢ÓÃ·¨ºÍ¹²ÏíÄ£Ê½¡£
+		//1. è®¾ç½®ç¼“å†²åŒºåˆ›å»ºä¿¡æ¯ï¼ŒåŒ…æ‹¬å¤§å°ã€ç”¨æ³•å’Œå…±äº«æ¨¡å¼ã€‚
 		VkBufferCreateInfo bufferInfo{};
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferInfo.size = size;
@@ -461,11 +455,11 @@ namespace lve {
 			throw std::runtime_error("failed to create vertex buffer!");
 		}
 
-		//2. ²éÑ¯¸Ã»º³åÇøµÄÄÚ´æĞèÇó¡£
+		//2. æŸ¥è¯¢è¯¥ç¼“å†²åŒºçš„å†…å­˜éœ€æ±‚ã€‚
 		VkMemoryRequirements memRequirements;
 		vkGetBufferMemoryRequirements(device_, buffer, &memRequirements);
 
-		//3. ·ÖÅäËùĞèµÄÄÚ´æ²¢°ó¶¨µ½»º³åÇø¡£
+		//3. åˆ†é…æ‰€éœ€çš„å†…å­˜å¹¶ç»‘å®šåˆ°ç¼“å†²åŒºã€‚
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
@@ -478,20 +472,20 @@ namespace lve {
 		vkBindBufferMemory(device_, buffer, bufferMemory, 0);
 	}
 
-	//¿ªÊ¼µ¥´ÎÃüÁî: ·ÖÅä²¢¿ªÊ¼Ò»¸öÓÃÓÚµ¥´ÎÌá½»µÄÃüÁî»º³åÇø¡£
+	//å¼€å§‹å•æ¬¡å‘½ä»¤: åˆ†é…å¹¶å¼€å§‹ä¸€ä¸ªç”¨äºå•æ¬¡æäº¤çš„å‘½ä»¤ç¼“å†²åŒºã€‚
 	VkCommandBuffer LVEDevice::beginSingleTimeCommands() {
-		//ÉèÖÃÃüÁî»º³åÇø·ÖÅäĞÅÏ¢£¬Ö¸¶¨ÃüÁî³Ø¼°»º³åÇøÊıÁ¿
+		//è®¾ç½®å‘½ä»¤ç¼“å†²åŒºåˆ†é…ä¿¡æ¯ï¼ŒæŒ‡å®šå‘½ä»¤æ± åŠç¼“å†²åŒºæ•°é‡
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandPool = commandPool;
 		allocInfo.commandBufferCount = 1;
 
-		//·ÖÅäÃüÁî»º³åÇø²¢³õÊ¼»¯
+		//åˆ†é…å‘½ä»¤ç¼“å†²åŒºå¹¶åˆå§‹åŒ–
 		VkCommandBuffer commandBuffer;
 		vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
 
-		//¿ªÊ¼ÃüÁî»º³åÇøµÄÂ¼ÖÆ
+		//å¼€å§‹å‘½ä»¤ç¼“å†²åŒºçš„å½•åˆ¶
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -500,12 +494,12 @@ namespace lve {
 		return commandBuffer;
 	}
 
-	//½áÊøµ¥´ÎÃüÁî: ½áÊøÃüÁî»º³åÇøµÄÂ¼ÖÆ£¬²¢Ìá½»ÃüÁîÒÔÖ´ĞĞ¡£
+	//ç»“æŸå•æ¬¡å‘½ä»¤: ç»“æŸå‘½ä»¤ç¼“å†²åŒºçš„å½•åˆ¶ï¼Œå¹¶æäº¤å‘½ä»¤ä»¥æ‰§è¡Œã€‚
 	void LVEDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-		//1. ½áÊøÖ®Ç°Â¼ÖÆµÄÃüÁî»º³åÇø¡£
+		//1. ç»“æŸä¹‹å‰å½•åˆ¶çš„å‘½ä»¤ç¼“å†²åŒºã€‚
 		vkEndCommandBuffer(commandBuffer);
 
-		//2. ´´½¨Ìá½»ĞÅÏ¢²¢Ìá½»µ½Í¼ĞÎ¶ÓÁĞ¡£
+		//2. åˆ›å»ºæäº¤ä¿¡æ¯å¹¶æäº¤åˆ°å›¾å½¢é˜Ÿåˆ—ã€‚
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.commandBufferCount = 1;
@@ -513,34 +507,34 @@ namespace lve {
 
 		vkQueueSubmit(graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
 
-		//3. µÈ´ı¶ÓÁĞ¿ÕÏĞ£¬È»ºóÊÍ·ÅÃüÁî»º³åÇø
+		//3. ç­‰å¾…é˜Ÿåˆ—ç©ºé—²ï¼Œç„¶åé‡Šæ”¾å‘½ä»¤ç¼“å†²åŒº
 		vkQueueWaitIdle(graphicsQueue_);
 		vkFreeCommandBuffers(device_, commandPool, 1, &commandBuffer);
 	}
 
-	//¸´ÖÆ»º³åÇø: ¸´ÖÆÊı¾İ´ÓÔ´»º³åÇøµ½Ä¿±ê»º³åÇø¡£
+	//å¤åˆ¶ç¼“å†²åŒº: å¤åˆ¶æ•°æ®ä»æºç¼“å†²åŒºåˆ°ç›®æ ‡ç¼“å†²åŒºã€‚
 	void LVEDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-		//1. ¿ªÊ¼Ò»¸öµ¥´ÎÃüÁî¡£
+		//1. å¼€å§‹ä¸€ä¸ªå•æ¬¡å‘½ä»¤ã€‚
 		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-		//2. ÉèÖÃ»º³åÇø¸´ÖÆÇøÓòĞÅÏ¢¡£
+		//2. è®¾ç½®ç¼“å†²åŒºå¤åˆ¶åŒºåŸŸä¿¡æ¯ã€‚
 		VkBufferCopy copyRegion{};
 		copyRegion.srcOffset = 0;  // Optional
 		copyRegion.dstOffset = 0;  // Optional
 		copyRegion.size = size;
-		//3. Ê¹ÓÃ vkCmdCopyBuffer Ö´ĞĞ¸´ÖÆ²Ù×÷¡£
+		//3. ä½¿ç”¨ vkCmdCopyBuffer æ‰§è¡Œå¤åˆ¶æ“ä½œã€‚
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-		//4. ½áÊøÃüÁî²¢Ìá½»¡£
+		//4. ç»“æŸå‘½ä»¤å¹¶æäº¤ã€‚
 		endSingleTimeCommands(commandBuffer);
 	}
 
-	//½«Êı¾İ´Ó»º³åÇø¸´ÖÆµ½Í¼Ïñ¡£
+	//å°†æ•°æ®ä»ç¼“å†²åŒºå¤åˆ¶åˆ°å›¾åƒã€‚
 	void LVEDevice::copyBufferToImage(
 		VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) 
 	{
-		//1. ¿ªÊ¼µ¥´ÎÃüÁî¡£
+		//1. å¼€å§‹å•æ¬¡å‘½ä»¤ã€‚
 		VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
-		//2. ÉèÖÃ VkBufferImageCopy ÇøÓò£¬¶¨ÒåÍ¼ÏñµÄÊôĞÔ£¨Èç²ã¡¢Æ«ÒÆÁ¿£©
+		//2. è®¾ç½® VkBufferImageCopy åŒºåŸŸï¼Œå®šä¹‰å›¾åƒçš„å±æ€§ï¼ˆå¦‚å±‚ã€åç§»é‡ï¼‰
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
 		region.bufferRowLength = 0;
@@ -554,7 +548,7 @@ namespace lve {
 		region.imageOffset = { 0, 0, 0 };
 		region.imageExtent = { width, height, 1 };
 
-		//3. Ê¹ÓÃ vkCmdCopyBufferToImage ½øĞĞ¸´ÖÆ¡£
+		//3. ä½¿ç”¨ vkCmdCopyBufferToImage è¿›è¡Œå¤åˆ¶ã€‚
 		vkCmdCopyBufferToImage(
 			commandBuffer,
 			buffer,
@@ -563,27 +557,27 @@ namespace lve {
 			1,
 			&region);
 
-		//4. ½áÊø²¢Ìá½»ÃüÁî¡£
+		//4. ç»“æŸå¹¶æäº¤å‘½ä»¤ã€‚
 		endSingleTimeCommands(commandBuffer);
 	}
 
-	//´´½¨ Vulkan Í¼Ïñ²¢·ÖÅäËùĞèÄÚ´æ¡£
+	//åˆ›å»º Vulkan å›¾åƒå¹¶åˆ†é…æ‰€éœ€å†…å­˜ã€‚
 	void LVEDevice::createImageWithInfo(
 		const VkImageCreateInfo& imageInfo,
 		VkMemoryPropertyFlags properties,
 		VkImage& image,
 		VkDeviceMemory& imageMemory) 
 	{
-		//1. ÓÃ vkCreateImage ´´½¨Í¼Ïñ£¬¼ì²é³É¹¦Óë·ñ¡£
+		//1. ç”¨ vkCreateImage åˆ›å»ºå›¾åƒï¼Œæ£€æŸ¥æˆåŠŸä¸å¦ã€‚
 		if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create image!");
 		}
 
-		//2. ²éÑ¯Í¼ÏñµÄÄÚ´æĞèÇó¡£
+		//2. æŸ¥è¯¢å›¾åƒçš„å†…å­˜éœ€æ±‚ã€‚
 		VkMemoryRequirements memRequirements;
 		vkGetImageMemoryRequirements(device_, image, &memRequirements);
 
-		//3. ¸ù¾İÄÚ´æĞèÇó·ÖÅäÄÚ´æ£¬²¢°ó¶¨µ½Í¼Ïñ¡£
+		//3. æ ¹æ®å†…å­˜éœ€æ±‚åˆ†é…å†…å­˜ï¼Œå¹¶ç»‘å®šåˆ°å›¾åƒã€‚
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;

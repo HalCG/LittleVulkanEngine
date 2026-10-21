@@ -10,7 +10,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "glm/glm.hpp"
 #include <glm/gtc/constants.hpp>
-#include <glm/gtc/matrix_transform.hpp> // °üº¬ rotate º¯Êı
+#include <glm/gtc/matrix_transform.hpp> // rotate
 
 //std
 #include <stdexcept>
@@ -21,6 +21,7 @@
 namespace lve {
 
 	FirstApp::FirstApp() {
+		// æ± ï¼šæœ€å¤šåˆ†é… MAX_FRAMES_IN_FLIGHT ä¸ª setï¼›å…¶ä¸­ UNIFORM_BUFFER ç±»å‹é¢åº¦åŒæ ·ä¸ºå¸§æ•°
 		globalPool =
 			LVEDescriptorPool::Builder(lveDevice)
 			.setMaxSets(LVESwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -33,39 +34,39 @@ namespace lve {
 	}
 
 	void FirstApp::run() {
+		// æ¯å¸§æ§½ä¸€ä¸ª UBOï¼šHOST_VISIBLE ä»¥ä¾¿ CPU æ¯å¸§ writeï¼›instanceCount=1
 		std::vector<std::unique_ptr<LVEBuffer>> uboBuffers(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
 		for (int i = 0; i < uboBuffers.size(); ++i) {
 			uboBuffers[i] = std::make_unique<LVEBuffer>(
 				lveDevice,
-				sizeof(GlobalUbo),
-				1,
+				sizeof(GlobalUbo),                 // instanceSize
+				1,                                 // instanceCount
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 				);
-			uboBuffers[i]->map();
+			uboBuffers[i]->map();  // æŒä¹… mapï¼Œå¾ªç¯å†…åª write+flush
 		}
 
+		// å¸ƒå±€ï¼šbinding 0 = UBOï¼Œvert/frag éƒ½èƒ½è¯»ï¼ˆå¯¹åº” GLSL set=0,binding=0ï¼‰
 		auto globalSetLayout =
 			LVEDescriptorSetLayout::Builder(lveDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
 
-		//±íÊ¾ÔÚ¶àÖ¡äÖÈ¾Ê±£¬ÎÒÃÇĞèÒªÎªÃ¿Ò»Ö¡×¼±¸Ò»¸öÃèÊö¼¯¡£Õâ¸öÉè¶¨Í¨³£ÓÃÓÚÖ§³ÖË«»º³å»ò¶à»º³åäÖÈ¾£¬ÒÔ¼õÉÙ GPU ºÍ CPU Ö®¼äµÄµÈ´ıÊ±¼ä¡£
+		// æ¯å¸§ä¸€ä¸ª setï¼ŒæŒ‡å‘å„è‡ªçš„ uboBuffers[i]ï¼Œé¿å… CPU å†™ A æ—¶ GPU è¿˜åœ¨è¯» A
 		std::vector<VkDescriptorSet> globalDescriptorSets(LVESwapChain::MAX_FRAMES_IN_FLIGHT);
 
-		//Ìî³äÃèÊö¼¯£ºĞèÒªÃèÊö·û¼¯²¼¾Ö¡¢ÃèÊö·û³Ø¡¢ÃèÊö·û¾ßÌåÖ¸ÏòµÄ¶ÔÏó£¨buffer¡¢image...£©
 		for (int i = 0; i < globalDescriptorSets.size(); i++) {
-			auto bufferInfo = uboBuffers[i]->descriptorInfo();
-			LVEDescriptorWriter(*globalSetLayout, *globalPool)		//´´½¨Ò»¸öÃèÊö¼¯Ğ´ÈëÆ÷¶ÔÏóÀûÓÃÖ®Ç°´´½¨µÄÃèÊö¼¯²¼¾ÖºÍÃèÊö³Ø¡£
-				.writeBuffer(0, &bufferInfo)						//½«µÚ 0 ºÅ°ó¶¨Î»ÖÃºÍ¶ÔÓ¦µÄ»º³åÇøÃèÊöĞÅÏ¢Ğ´ÈëÃèÊö¼¯ÖĞ¡£Õâ¸ö»º³åÇøĞÅÏ¢»á½«Êı¾İ´«µİ¸ø×ÅÉ«Æ÷
-				.build(globalDescriptorSets[i]);					//¹¹½¨ÃèÊö¼¯£¬²¢½«Æä´æ´¢µ½¶ÔÓ¦µÄ
+			auto bufferInfo = uboBuffers[i]->descriptorInfo();  // å¡« VkDescriptorBufferInfo
+			LVEDescriptorWriter(*globalSetLayout, *globalPool)
+				.writeBuffer(0, &bufferInfo)   // å†™å…¥ binding 0
+				.build(globalDescriptorSets[i]);
 		}
-
 
 		SimpleRenderSystem simpleRenderSystem{
 			lveDevice,
-			lveRenderer.getSwapChainRenderPass(),			//»ñÈ¡½»»»Á´µÄäÖÈ¾Í¨µÀ£¬Í¨³£°üº¬½øĞĞ»æÍ¼Ê±ËùĞèµÄÏêÏ¸ĞÅÏ¢¡£
-			globalSetLayout->getDescriptorSetLayout() };	//È¡Ö®Ç°´´½¨µÄÈ«¾ÖÃèÊö¼¯²¼¾Ö£¬ÒÔ±ãÔÚäÖÈ¾¹ı³ÌÖĞÊ¹ÓÃ¡£
+			lveRenderer.getSwapChainRenderPass(),
+			globalSetLayout->getDescriptorSetLayout() };
 
 		PointLightSystem pointLightSystem{
 							lveDevice,
@@ -74,6 +75,7 @@ namespace lve {
 
 		LVECamera camera{};
 
+		// viewerObject åªé©±åŠ¨ç›¸æœºï¼Œä¸å‚ä¸ç½‘æ ¼ç»˜åˆ¶
 		auto viewerObject = LVEGameObject::createGameObject();
 		viewerObject.transform.translation.z = -2.5f;
 		KeyboardMovementController cameraController{};
@@ -90,7 +92,6 @@ namespace lve {
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = lveRenderer.getAspectRatio();
-			//camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 100.f);
 
 			if (auto commandBuffer = lveRenderer.beginFrame()) {
@@ -103,64 +104,59 @@ namespace lve {
 					globalDescriptorSets[frameIndex],
 					gameObjects };
 
-				// update
+				// --- æ›´æ–°å…¨å±€ UBOï¼ˆæŠ•å½±/è§†å›¾/ç‚¹å…‰ï¼‰---
 				GlobalUbo ubo{};
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
 				ubo.inverseView = camera.getInverseView();
 				pointLightSystem.update(frameInfo, ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
-				uboBuffers[frameIndex]->flush();//!!! ×¢Òâ µ±Ç°äÖÈ¾¹ÜÏß¶ÔÓ¦µÄuboÔÚÕâÀïË¢ĞÂ£¬±»¸æÖª´æ´¢Î»ÖÃ¼°³¤¶È
+				uboBuffers[frameIndex]->flush();  // é COHERENT æ—¶å¿…é¡» flushï¼Œå¦åˆ™ GPU å¯èƒ½è¯»åˆ°æ—§æ•°æ®
 
-				/*
-				* Á½¸ö¹ÜµÀµÄÊ¹ÓÃ£ºÔÚ Vulkan ÖĞ£¬Ê¹ÓÃ¶à¸ö¹ÜµÀÊÇ³£¼ûµÄ×ö·¨£¬ÓÈÆäÊÇÔÚ´¦Àí²»Í¬ÀàĞÍµÄäÖÈ¾ÈÎÎñÊ±¡£Ã¿¸ö¹ÜµÀ¿ÉÒÔÓĞ²»Í¬µÄ×´Ì¬ºÍ×ÊÔ´°ó¶¨£¬ÊÊÓ¦²»Í¬µÄäÖÈ¾ĞèÇó¡£
-				* Ã¿¸ö¹ÜµÀÔÚ´´½¨Ê±¶¼ĞèÒªÖ¸¶¨Ò»¸ö¹ÜµÀ²¼¾Ö£¬Õâ¸ö²¼¾Ö¶¨ÒåÁË¸Ã¹ÜµÀ¿ÉÒÔÊ¹ÓÃµÄÃèÊö·û¼¯ºÍÍÆËÍ³£Á¿¡£Í¨¹ıÕâÖÖ·½Ê½£¬Vulkan ÖªµÀÔÚäÖÈ¾¹ı³ÌÖĞÈçºÎ·ÃÎÊºÍÊ¹ÓÃÕâĞ©×ÊÔ´¡£
-				* ÔÚ pointLightSystem ÖĞ£¬¹ÜµÀ²¼¾Ö°üº¬ÁË¹âÔ´Ïà¹ØµÄÃèÊö·û¼¯£¬¶øÔÚ simpleRenderSystem ÖĞ£¬¹ÜµÀ²¼¾ÖÔò¿ÉÄÜ°üº¬ÓëÄ£ĞÍäÖÈ¾Ïà¹ØµÄÃèÊö·û¼¯¡£
-				*/
-				// render£º Ò»¸öÕûÌåµÄäÖÈ¾Á÷³Ì£¬ÒÔ¼¯³É²»Í¬µÄäÖÈ¾ÈÎÎñ£¨ÈçäÖÈ¾¶ÔÏóºÍ¹âÔ´Ğ§¹û£©
+				// --- åŒä¸€ RenderPass å†…ä¸¤æ¡ç®¡çº¿ï¼šå…ˆç½‘æ ¼ï¼Œå†ç‚¹å…‰ Billboard ---
 				lveRenderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(frameInfo);		//¸ºÔğ½«ËùÓĞÓÎÏ·¶ÔÏó£¨ÈçÄ£ĞÍºÍÆäËû¿ÉÊÓÔªËØ£©»æÖÆµ½µ±Ç°Ö¡¡£
-				pointLightSystem.render(frameInfo);						//¸ºÔğ´¦Àí³¡¾°ÖĞµÄ¹âÔ´£¬¼ÆËãÃ¿¸ö¹âÔ´µÄ¹âÕÕĞ§¹û£¬²¢½«ÆäÓ¦ÓÃµ½ÒÑ¾­äÖÈ¾µÄÓÎÏ·¶ÔÏó¡£Õâ¿ÉÒÔÊÇÔö¼Ó³¡¾°¹âÕÕºÍÒõÓ°µÄĞ§¹û¡£
+				simpleRenderSystem.renderGameObjects(frameInfo);
+				pointLightSystem.render(frameInfo);
 				lveRenderer.endSwapChainRenderPass(commandBuffer);
-				lveRenderer.endFrame();									//ÕæÕıµÄäÖÈ¾£ºvkQueueSubmit ÃüÁî»º³åÇøÌá½»¸øÍ¼ĞÎ¶ÓÁĞ¡£
+				lveRenderer.endFrame();  // submit + present
 			}
-		} 
+		}
 
 		vkDeviceWaitIdle(lveDevice.device());
 	}
 
 	void FirstApp::loadGameObjects() {
-		//obj
+		// Models from https://github.com/blurrypiano/littleVulkanEngine/tree/main/models
+		// Working directory should be $(ProjectDir) so "models/..." resolves.
 		std::shared_ptr<LVEModel> lveModel =
-			LVEModel::createModelFromFile(lveDevice, "C:/Users/tolcf/Desktop/models/flat_vase.obj");
+			LVEModel::createModelFromFile(lveDevice, "models/flat_vase.obj");
 		auto flatVase = LVEGameObject::createGameObject();
 		flatVase.model = lveModel;
 		flatVase.transform.translation = { -.5f, .5f, 0.f };
 		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
 		gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-		lveModel = LVEModel::createModelFromFile(lveDevice, "C:/Users/tolcf/Desktop/models/smooth_vase.obj");
+		lveModel = LVEModel::createModelFromFile(lveDevice, "models/smooth_vase.obj");
 		auto smoothVase = LVEGameObject::createGameObject();
 		smoothVase.model = lveModel;
 		smoothVase.transform.translation = { .5f, .5f, 0.f };
 		smoothVase.transform.scale = { 3.f, 1.5f, 3.f };
 		gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
-		lveModel = LVEModel::createModelFromFile(lveDevice, "C:/Users/tolcf/Desktop/models/quad.obj");
+		lveModel = LVEModel::createModelFromFile(lveDevice, "models/quad.obj");
 		auto floor = LVEGameObject::createGameObject();
 		floor.model = lveModel;
 		floor.transform.translation = { 0.f, .5f, 0.f };
 		floor.transform.scale = { 3.f, 1.f, 3.f };
 		gameObjects.emplace(floor.getId(), std::move(floor));
 
-		//light
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
 			{.1f, .1f, 1.f},
 			{.1f, 1.f, .1f},
 			{1.f, 1.f, .1f},
 			{.1f, 1.f, 1.f},
-			{1.f, 1.f, 1.f}  //
+			{1.f, 1.f, 1.f}
 		};
 
 		for (int i = 0; i < lightColors.size(); i++) {
@@ -175,58 +171,3 @@ namespace lve {
 		}
 	}
 };
-
-/*
-ÔÚÄãÌá¹©µÄ `GlobalUbo` ½á¹¹ÌåÖĞ£¬`alignas(16)` ÊÇÓÃÀ´Ö¸¶¨ `lightColor` ×Ö¶ÎµÄÄÚ´æ¶ÔÆë·½Ê½¡£ÕâÖÖ¶ÔÆëÔÚÍ¼ĞÎ±à³ÌÖĞ·Ç³£ÖØÒª£¬ÓÈÆäÊÇÔÚÊ¹ÓÃÈç Vulkan »ò Direct3D ÕâÀàÏÖ´úÍ¼ĞÎ API Ê±¡£ÒÔÏÂÊÇÏêÏ¸·ÖÎö£º
-
-### ÄÚ´æ¶ÔÆëµÄ±³¾°
-
-1. **¸ÅÄîºÍÄ¿µÄ**:
-	- ÄÚ´æ¶ÔÆëÊÇÖ¸Êı¾İÔÚÄÚ´æÖĞ´æ´¢µÄ·½Ê½£¬Ê¹ÆäÆğÊ¼µØÖ··ûºÏÌØ¶¨µÄ¶ÔÆëÒªÇó¡£Ò»°ãÀ´Ëµ£¬Êı¾İÀàĞÍµÄ´óĞ¡ºÍ¶ÔÆëÒªÇó»áÓ°ÏìÆäÔÚÄÚ´æÖĞµÄ²¼¾Ö¡£
-	- ¶ÔÆëµÄÖ÷ÒªÄ¿µÄÔÚÓÚÌá¸ß·ÃÎÊĞ§ÂÊ£¬ÓÈÆäÊÇÔÚ SIMD Ö¸Áî£¨Èç AVX¡¢SSE£©ºÍ GPU ´¦ÀíÊ±£¬¶ÔÆë¿ÉÒÔ¼õÉÙÄÚ´æ·ÃÎÊÑÓ³Ù²¢Ìá¸ßĞÔÄÜ¡£
-
-2. **GPU ºÍ UBO**:
-   - ÔÚÍ¼ĞÎ±à³ÌÖĞ£¬Uniform Buffer Objects (UBOs) ÓÃÓÚ½«Í³Ò»Êı¾İ´«µİ¸ø×ÅÉ«Æ÷¡£Îª±£Ö¤Êı¾İ°´ÕÕÌØ¶¨¸ñÊ½ÕıÈ·´«µİ£¬Êı¾İµÄ¶ÔÆë¾ÍÏÔµÃÓÈÎªÖØÒª¡£
-   - ¶ÔÓÚĞí¶à GPU ¼Ü¹¹£¬Í¨³£ÒªÇóÌØ¶¨µÄÊı¾İÀàĞÍ±ØĞë°´ÕÕÒ»¶¨µÄ×Ö½Ú¶ÔÆë¡£ÀıÈç£¬`glm::vec4` Í¨³£ĞèÒªÔÚÄÚ´æÖĞÒÔ 16 ×Ö½Ú¶ÔÆë£¨ÒòÎªËüµÄ´óĞ¡ÊÇ 16 ×Ö½Ú£©¡£
-
-### ¶Ô `lightColor` Ê¹ÓÃ `alignas(16)`
-
-1. **ºÏ¹æĞÔ**:
-   - Ê¹ÓÃ `alignas(16)` ±£Ö¤ `lightColor` µÄÆğÊ¼µØÖ·ÊÇ 16 ×Ö½Ú¶ÔÆëµÄ¡£ÕâÈ·±£ÁËÊı¾İÔÚ GPU ½×¶Î±»ÕıÈ·¶ÁÈ¡£¬²¢±ÜÃâÒò¶ÔÆë²»µ±µ¼ÖÂµÄĞÔÄÜÎÊÌâ¡£
-
-2. **½á¹¹²¼¾Ö**:
-   - ÔÚ½á¹¹ÌåÖĞ£¬·Ç¶ÔÆëÊı¾İ¿ÉÄÜµ¼ÖÂ½á¹¹ÌåÕûÌåµÄ¶ÔÆëÎÊÌâ£¬´Ó¶øÓ°ÏìºóĞø×Ö¶ÎµÄ²¼¾Ö¡£ÔÚÊ¹ÓÃ `alignas(16)` ºó£¬`lightColor` È·±£ÆäÎ»ÖÃÄÜ¹»ºöÂÔÆäËûĞ¡×Ö¶ÎµÄ¶ÔÆëÒªÇó£¬±£³ÖÕûÌå½á¹¹µÄºÏÀíĞÔ¡£
-
-3. **ĞÔÄÜÓÅ»¯**:
-   - Í¨¹ıÈ·±£ `lightColor` 16 ×Ö½Ú¶ÔÆë£¬¿ÉÒÔÌá¸ß GPU ´¦ÀíËüµÄĞÔÄÜ£¬¼õÉÙÁË·ÃÎÊÊ±µÄÄÚ´æ¶ÁÈ¡³É±¾¡£
-
-### ×Ü½á
-
-×ÜÖ®£¬ÔÚÉè¼Æ `GlobalUbo` ½á¹¹ÌåÊ±Ê¹ÓÃ `alignas(16)` ÊÇÎªÁËÈ·±£ `lightColor` °´ÕÕ 16 ×Ö½Ú¶ÔÆë´æ´¢£¬ÒÔ·ûºÏÏÖ´ú GPU µÄ·ÃÎÊĞèÇó£¬ÌáÉıĞÔÄÜ²¢±ÜÃâÇ±ÔÚµÄ¶ÔÆëÎÊÌâ¡£Õâ¶ÔÔÚÊµÊ±äÖÈ¾ÖĞµÄÊı¾İ´¦ÀíÄÜÁ¦ÓĞ×Å»ı¼«µÄÓ°Ïì¡£Èç¹ûÓĞ¸ü¾ßÌåµÄÓ¦ÓÃ³¡¾°»ò´úÂëÏ¸½ÚĞèÌÖÂÛ£¬»¶Ó­ÌáÎÊ£¡
-
-*/
-
-
-/*
-ÔÚÍ¼ĞÎäÖÈ¾¹ÜÏßÖĞ£¬**»æÖÆ²Ù×÷µÄÊµ¼ÊÖ´ĞĞ**ÊÇÔÚÃüÁî»º³åÇøÌá½»¸ø GPU ºó½øĞĞµÄ¡£ÔÚÄãµÄ´úÂëÖĞ£¬`draw` ·½·¨È·ÊµÖ»ÊÇ½«»æÖÆÃüÁî¼ÇÂ¼µ½ **`commandBuffer`** ÖĞ£¬¶ø²»ÊÇÖ±½Ó½øĞĞ»æÖÆ¡£ÕâÀïÊÇÕû¸öÁ÷³ÌµÄ»ù±¾²½Öè£º
-
-1. **ÃüÁî¼ÇÂ¼**£ºÔÚÄãËùÌá¹©µÄ´úÂëÖĞ£¬Í¨¹ıµ÷ÓÃ `vkCmdBindDescriptorSets`¡¢`vkCmdPushConstants` ºÍ `obj.model->draw(frameInfo.commandBuffer);` ¼ÇÂ¼ËùÓĞĞèÒªµÄÃüÁî£¨°üÀ¨°ó¶¨ÃèÊö¼¯¡¢¸üĞÂÍÆËÍ³£Á¿¡¢»æÖÆÃüÁîµÈ£©µ½ÃüÁî»º³åÇø¡£ÕâÒ»½×¶Î³ÆÎª **ÃüÁî¼ÇÂ¼£¨Command Recording£©**¡£
-
-2. **ÃüÁîÌá½»**£ºÍê³ÉÃüÁî¼ÇÂ¼ºó£¬Äã»áµ÷ÓÃ **`vkQueueSubmit`** »òÀàËÆµÄº¯Êı£¬½«ÃüÁî»º³åÇøÌá½»¸øÍ¼ĞÎ¶ÓÁĞ¡£ÀıÈç£º
-   ```cpp
-   vkQueueSubmit(queue, 1, &submitInfo, nullptr);
-   ```
-   ÔÚÕâ¸ö²½ÖèÖĞ£¬¼ÇÂ¼ÔÚÃüÁî»º³åÇøÖĞµÄÃüÁî»á±»Ìá½»µ½ GPU£¬ÒÔ±ã¿ªÊ¼Ö´ĞĞ¡£ÕâÒ»½×¶Î³ÆÎª **ÃüÁîÌá½»£¨Command Submission£©**¡£
-
-3. **GPUÖ´ĞĞ**£ºÒ»µ©ÃüÁî»º³åÇø±»Ìá½»£¬GPU ½«»á¿ªÊ¼Ö´ĞĞÕâĞ©ÃüÁî¡£´ËÊ±£¬»æÖÆ²Ù×÷ÕæÕı·¢Éú¡£GPU »á°´ÕÕÃüÁî»º³åÇøÖĞµÄÃüÁîÖğ¸öÖ´ĞĞ£¬ÀıÈç´¦Àí¶¥µãÊı¾İ¡¢½øĞĞ±ä»»¡¢½øĞĞ¹âÕ¤»¯¡¢Éú³É×îÖÕµÄÆ¬¶ÎµÈ¡£
-
-4. **½á¹ûÏÔÊ¾**£º×îºó£¬µ±ËùÓĞÃüÁîÖ´ĞĞÍê±Ï£¬½á¹û½«»á±»Ğ´ÈëÖ¡»º³åÇø£¬×îÖÕÍ¨¹ı½»»»Á´³ÊÏÖµ½ÆÁÄ»ÉÏ¡£ÕâÍ¨³£Éæ¼°µ÷ÓÃ `vkQueuePresentKHR`¡£
-
-### ×Ü½á
-
-- **»æÖÆ²Ù×÷µÄÊµ¼ÊÖ´ĞĞ** ÔÚÌá½»ÃüÁî»º³åÇø²¢ÓÉ GPU ´¦ÀíÊ±·¢Éú£¬¶ø²»ÊÇÔÚµ÷ÓÃ `draw` ·½·¨Ê±¡£
-- `draw` ·½·¨Ö»¸ºÔğ¼ÇÂ¼ÃüÁî£¬¶øËùÓĞµÄÊµ¼Ê»æÖÆ²Ù×÷£¨ÓĞÕæÕıµÄ GPU ¹¤×÷£©ÊÇÔÚÌá½»ÃüÁîºó½øĞĞµÄ¡£
-
-Èç¹ûÄãÏë¸üÏêÏ¸ÁË½âÌá½»ºÍÖ´ĞĞ¹ı³ÌÖĞµÄÈÎºÎ¾ßÌå²½Öè£¬»òÕß¶Ô Vulkan ÖĞµÄÍ¼ĞÎ¹ÜµÀÓĞ¸ü¶àµÄÒÉÎÊ£¬ÇëËæÊ±ÎÊÎÒ£¡
-
-*/
